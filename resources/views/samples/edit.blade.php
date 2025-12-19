@@ -1,0 +1,2009 @@
+@extends('layouts.dashboard')
+@section('title')
+    {{ translate('edit_sample') }}
+@endsection
+@section('css')
+    <link rel="stylesheet" href="{{ asset('css/select2.min.css') }}">
+
+    <style>
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #dedede;
+            border: 1px solid #dedede;
+            border-radius: 2px;
+            color: #222;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+    </style>
+@endsection
+@section('content')
+    <div class="page-breadcrumb">
+        <div class="row">
+            <div class="col-5 align-self-center">
+                <h4 class="page-title">{{ translate('edit_sample') }}</h4>
+                <div class="d-flex align-items-center">
+
+                </div>
+            </div>
+            <div class="col-7 align-self-center">
+                <div class="d-flex no-block justify-content-end align-items-center">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('admin.dashboard') }}">{{ __('dashboard.home') }} </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ __('dashboard.dashboard') }}</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="mb-5"></div>
+    <div class="container-fluid">
+        <!-- ============================================================== -->
+        <!-- Start Page Content -->
+        <!-- ============================================================== -->
+        <form action="{{ route('admin.sample.update', $sample->id) }}" method="post" enctype="multipart/form-data">
+            @csrf
+            @method('PATCH')
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex gap-2">
+                                <h4 class="mb-0">{{ __('roles.basic_information') }}</h4>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+
+                                <div class="col-md-6   col-lg-6">
+                                    <div class="form-group">
+                                        <label for="">{{ __('samples.plant_name') }} <span
+                                                class="text-danger">*</span></label>
+                                        <select name="main_plant_item" class="form-control">
+                                            <option value="">{{ __('samples.select_plant') }}</option>
+                                            @foreach ($plants as $plant_item)
+                                                <option value="{{ $plant_item->id }}"
+                                                    {{ $sample->plant_id == $plant_item->id ? 'selected' : '' }}>
+                                                    {{ $plant_item->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('main_plant_item')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6   col-lg-6">
+                                    <div class="form-group">
+                                        <label for="">{{ __('samples.sub_plant_name') }} </label>
+                                        <select name="sub_plant_item" class="form-control">
+                                            <option value="">{{ __('samples.select_sub_plant') }}</option>
+                                            @foreach ($sub_plants as $sub_plants_item)
+                                                <option value="{{ $sub_plants_item->id }}"
+                                                    {{ $sample->sub_plant_id == $sub_plants_item->id ? 'selected' : '' }}>
+                                                    {{ $sub_plants_item->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('sub_plants_item')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-6   col-lg-6">
+                                    <div class="form-group">
+                                        <label for="">{{ __('samples.sample_name') }} <span
+                                                class="text-danger">*</span></label>
+                                        <select name="sample_name" class="form-control">
+                                            <option value="{{ $sample->plant_sample_id }}">
+                                                {{ $sample->sample_plant->name }}</option>
+                                        </select>
+                                        @error('sample_name')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4   col-lg-4">
+                                    <div class="form-group">
+                                        <label for="">{{ __('samples.toxic') }} <span class="text-danger ms-1"
+                                                style="font-size: 18px;" >☠</span></label>
+                                        <select name="toxic" class="form-control">
+                                            @foreach ($toxic_degrees as $toxic_degree_item)
+                                                <option value="{{ $toxic_degree_item->id }}"
+                                                    {{ $sample->toxic == $toxic_degree_item->id ? 'selected' : '' }}>
+                                                    {{ $toxic_degree_item->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('toxic')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                 <div class="col-md-2 col-lg-2">
+                                    <div class="form-group">
+                                        <label for="coa" class="form-label">{{ translate('coa') }}</label>
+                                        <div class="form-check form-switch m-2">
+                                            <input class="form-check-input" type="checkbox" id="coa" name="coa" @if(isset($sample->coa))
+                                                checked
+                                            @endif>
+                                        </div>
+                                        @error('coa')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                    @php
+                        $var = [];
+                    @endphp
+                    @foreach ($sample_test_methods as $sample_test_method_item)
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-2">
+                                    <h4 class="mb-0">{{ __('samples.associated_test_method') }}</h4>
+                                </div>
+                                <a
+                                    href="{{ route('admin.sample.delete_test_method_from_sample', $sample_test_method_item->id) }}"class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                            </div>
+                            <div class="card-body  border border-primary">
+                                <div class="row componants" id="componants">
+                                    <div class="col-md-6   col-lg-6">
+                                        <div class="form-group">
+                                            <label for="">{{ __('test_method.test_method') }} <span
+                                                    class="text-danger">*</span></label>
+                                            <select name="test_method[{{ $sample_test_method_item->id }}]"
+                                                onchange="test_method_master(this,{{ $sample_test_method_item->id }})"
+                                                class="form-control">
+                                                <option value="">{{ translate('select_test_method') }}</option>
+                                                @foreach ($test_methods as $test_method_item)
+                                                    <option value="{{ $test_method_item->id }}"
+                                                        {{ $sample_test_method_item->test_method_id == $test_method_item->id ? 'selected' : '' }}>
+                                                        {{ $test_method_item->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('test_method')
+                                                <span class="error text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6   col-lg-6">
+                                        <div class="form-group">
+                                            <label for="">{{ translate('component') }} <span
+                                                    class="text-danger">*</span></label>
+                                            <select name="main_components[{{ $sample_test_method_item->id }}]"
+                                                onchange="main_components_master(this,{{ $sample_test_method_item->id }})"
+                                                class="form-control">
+                                                <option value="">{{ translate('select_component') }}</option>
+                                                <option value="-1">{{ translate('select_all_components') }}</option>
+                                                @foreach ($sample_test_method_item->master_test_method->test_method_items as $sample_test_method_items_item)
+                                                    <option value="{{ $sample_test_method_items_item->id }}"
+                                                        {{ $sample_test_method_item->sample_test_method_items->contains('test_method_item_id', $sample_test_method_items_item->id) ? 'selected' : '' }}>
+                                                        {{ $sample_test_method_items_item->name }}</option>
+                                                @endforeach
+
+                                            </select>
+                                            @error('test_method')
+                                                <span class="error text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                    </div>
+
+                                    <div class="main_components  col-lg-12"
+                                        id="main_components_{{ $sample_test_method_item->id }}">
+                                        @foreach ($sample_test_method_item->sample_test_method_items as $sample_test_method_sub_item)
+                                            <div class="container mt-4">
+
+                                                <div class="  d-flex justify-content-between align-items-center">
+                                                    <label class="form-label">{{ translate('Components_&_Limits') }} :</label>
+
+                                                    <a
+                                                        href="{{ route('admin.sample.delete_test_method_item_from_sample', $sample_test_method_sub_item->id) }}"class="btn btn-danger btn-sm">
+                                                        <i class="fa fa-trash"></i>
+                                                    </a>
+                                                    {{-- {{ dd($sample_test_method_sub_item) }} --}}
+                                                </div>
+                                                <input type="hidden"
+                                                    name="test_method_item_id[{{ $sample_test_method_sub_item->id }}]"
+                                                    value="{{ $sample_test_method_sub_item->test_method_item_id }}">
+                                                <div class="border border-primary rounded p-3 mb-3"
+                                                    style="background-color: #f8f9fa;">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <input type="checkbox" id="tds"
+                                                                name="component_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                checked>
+                                                            <label for="tds"
+                                                                class="fw-bold text-primary">{{ $sample_test_method_sub_item->test_method_item->name }}
+                                                            </label>
+                                                        </div>
+                                                        <div class="text-end text-primary fw-bold">{{ translate('Unit') }} :
+                                                            {{ $sample_test_method_sub_item->test_method_item->main_unit && $sample_test_method_sub_item->test_method_item->main_unit->name ? $sample_test_method_sub_item->test_method_item->main_unit->name : 'N/A' }}
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <label for="tds"
+                                                                class="fw-bold text-primary">{{ translate('warning_limit') }}</label>
+                                                            <input type="number"
+                                                                name="warning_limit_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                class="form-control"
+                                                                value="{{ $sample_test_method_sub_item->warning_limit }}"
+                                                                onkeyup="only_one_general_change_warning_limit_type_old({{ $sample_test_method_sub_item->id }})">
+                                                            <input type="number"
+                                                                name="warning_limit_end_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                class="form-control {{ $sample_test_method_sub_item->warning_limit_end ? '' : 'd-none' }}"
+                                                                onkeyup="only_one_general_change_warning_limit_type_old({{ $sample_test_method_sub_item->id }})"
+                                                                value="{{ $sample_test_method_sub_item->warning_limit_end ? $sample_test_method_sub_item->warning_limit_end : '' }}">
+                                                        </div>
+                                                        <div class="text-end text-primary fw-bold">
+                                                            <label for="tds"
+                                                                class="fw-bold text-primary">{{ translate('action_limit') }}</label>
+                                                            <input type="number"
+                                                                name="action_limit_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                class="form-control"
+                                                                value="{{ $sample_test_method_sub_item->action_limit }}"
+                                                                onkeyup="only_one_general_change_action_limit_type_old({{ $sample_test_method_sub_item->id }} )">
+                                                            <input type="number"
+                                                                name="action_limit_end_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                class="form-control {{ $sample_test_method_sub_item->action_limit_end ? '' : 'd-none' }}"
+                                                                value="{{ $sample_test_method_sub_item->action_limit_end ? $sample_test_method_sub_item->action_limit_end : '' }}"
+                                                                onkeyup="only_one_general_change_action_limit_type_old({{ $sample_test_method_sub_item->id }} )">
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <label for="tds"
+                                                                class="fw-bold text-primary">{{ translate('warning_limit_type') }}</label>
+                                                            <select
+                                                                name="warning_limit_type_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                class="form-control"
+                                                                onchange="only_one_general_change_warning_limit_type_old({{ $sample_test_method_sub_item->id }})">
+                                                                <option value="">
+                                                                    {{ translate('select_warning_limit_type') }}</option>
+                                                                <option value="="
+                                                                    {{ $sample_test_method_sub_item->warning_limit_type == '=' ? 'selected' : '' }}>
+                                                                    =</option>
+                                                                <option value=">="
+                                                                    {{ $sample_test_method_sub_item->warning_limit_type == '>=' ? 'selected' : '' }}>
+                                                                    &ge;</option>
+                                                                <option value="<="
+                                                                    {{ $sample_test_method_sub_item->warning_limit_type == '<=' ? 'selected' : '' }}>
+                                                                    &le;</option>
+                                                                <option value="<"
+                                                                    {{ $sample_test_method_sub_item->warning_limit_type == '<' ? 'selected' : '' }}>
+                                                                    &lt;</option>
+                                                                <option value=">"
+                                                                    {{ $sample_test_method_sub_item->warning_limit_type == '>' ? 'selected' : '' }}>
+                                                                    &gt;</option>
+                                                                <option value="8646"
+                                                                    {{ $sample_test_method_sub_item->warning_limit_type == '8646' ? 'selected' : '' }}>
+                                                                    &#8646;</option>
+
+                                                            </select>
+                                                        </div>
+                                                        <div class="text-end text-primary fw-bold">
+                                                            <label for="tds"
+                                                                class="fw-bold text-primary">{{ translate('action_limit_type') }}</label>
+
+                                                            <select
+                                                                name="action_limit_type_old[{{ $sample_test_method_sub_item->id }}]"
+                                                                class="form-control"
+                                                                onchange="only_one_general_change_action_limit_type_old({{ $sample_test_method_sub_item->id }})">
+                                                                <option value="">
+                                                                    {{ translate('select_action_limit_type') }}</option>
+                                                                <option value="="
+                                                                    {{ $sample_test_method_sub_item->action_limit_type == '=' ? 'selected' : '' }}>
+                                                                    =</option>
+                                                                <option value=">="
+                                                                    {{ $sample_test_method_sub_item->action_limit_type == '>=' ? 'selected' : '' }}>
+                                                                    &ge;</option>
+                                                                <option value="<="
+                                                                    {{ $sample_test_method_sub_item->action_limit_type == '<=' ? 'selected' : '' }}>
+                                                                    &le;</option>
+                                                                <option value="<"
+                                                                    {{ $sample_test_method_sub_item->action_limit_type == '<' ? 'selected' : '' }}>
+                                                                    &lt;</option>
+                                                                <option value=">"
+                                                                    {{ $sample_test_method_sub_item->action_limit_type == '>' ? 'selected' : '' }}>
+                                                                    &gt;</option>
+                                                                <option value="8646"
+                                                                    {{ $sample_test_method_sub_item->action_limit_type == '8646' ? 'selected' : '' }}>
+                                                                    &#8646;</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                                <small class="text-muted d-block">{{ translate('Warning_Limit') }}</small>
+                                                                <span class="text-warning fw-bold"
+                                                                    id="warning_limit_type_old-{{ $sample_test_method_sub_item->id }}">
+                                                                    @if ($sample_test_method_sub_item->warning_limit_type == '8646')
+                                                                        {{ $sample_test_method_sub_item->warning_limit . ' ' }}
+                                                                        &#8646;
+                                                                        {{ ' ' . $sample_test_method_sub_item->warning_limit_end }}
+                                                                    @else
+                                                                        {{ $sample_test_method_sub_item->warning_limit_type . ' ' . $sample_test_method_sub_item->warning_limit }}
+                                                                    @endif
+                                                                </span>
+
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                                <small class="text-muted d-block">{{ translate('Action_Limit') }}</small>
+                                                                <span class="text-danger fw-bold"
+                                                                    id="action_limit_type_old-{{ $sample_test_method_sub_item->id }}">
+
+                                                                    @if ($sample_test_method_sub_item->action_limit_type == '8646')
+                                                                        {{ $sample_test_method_sub_item->action_limit . ' ' }}
+                                                                        &#8646;
+                                                                        {{ ' ' . $sample_test_method_sub_item->action_limit_end }}
+                                                                    @else
+                                                                        {{ $sample_test_method_sub_item->action_limit_type . ' ' . $sample_test_method_sub_item->action_limit }}
+                                                                    @endif
+                                                                </span>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div id="test_methods_main"></div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            <div>
+                <div class="form-group mt-2"
+                    @if (session()->get('locale') == 'ar') style="text-align: left;" @else style="text-align: right;" @endif>
+                    <button type="submit" class="btn btn-primary mt-2">{{ translate('update_sample') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{-- {{ dd($var) }} --}}
+@endsection
+@section('js')
+    <script src="{{ asset('js/select2.min.js') }}"></script>
+
+    <script>
+        function test_method_master(element, id) {
+            var test_method_id = $(element).val();
+            // console.log(test_method_id , id);
+            if (test_method_id) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_components_by_test_method', ':id') }}".replace(':id',
+                        test_method_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+
+                        if (data) {
+                            // console.log('ff'); 
+                            if (data && data.components && data.components.length > 0) {
+                                $(`select[name="main_components_${id}"]`).empty().prop('disabled', false);
+                                var select = $(`select[name="main_components[${id}]"]`);
+                                select.empty().prop('disabled', false);
+                                select.append(
+                                    '<option value="-1">{{ __('samples.select_component') }}</option>'
+                                );
+                                select.append(
+                                    '<option value="-1">{{ __('samples.select_all_component') }}</option>'
+                                );
+
+                                $.each(data.components, function(index, component) {
+                                    select.append('<option value="' + component.id + '">' +
+                                        component
+                                        .name + '</option>');
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+
+        }
+        $('select[name=main_plant_item]').on('change', function() {
+            var tenant_id = $(this).val();
+            if (tenant_id) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_sub_from_plant', ':id') }}".replace(':id',
+                        tenant_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        if (data) {
+                            $('select[name="sub_plant_item"]').empty().prop('disabled', true);
+                            $('select[name="sample_name"]').empty().prop('disabled', true);
+                            if (data && data.plants && data.plants.length > 0) {
+                                $('select[name="sub_plant_item"]').empty().prop('disabled', false);
+                                var select = $('select[name="sub_plant_item"]');
+                                select.empty().prop('disabled', false);
+                                select.append(
+                                    '<option value="">{{ __('samples.select_sub_plant') }}</option>'
+                                );
+                                $.each(data.plants, function(index, plant) {
+                                    select.append('<option value="' + plant.id + '">' + plant
+                                        .name + '</option>');
+                                });
+                                if (data.samples && data.samples.length > 0) {
+                                    var select = $('select[name="sample_name"]');
+                                    select.empty().prop('disabled', false);
+
+                                    $.each(data.samples, function(index, sample) {
+                                        select.append('<option value="' + sample.id + '">' +
+                                            sample
+                                            .name + '</option>');
+                                    });
+
+                                }
+                            } else if (data && data.samples && data.samples.length > 0) {
+                                $('select[name="sample_name"]').empty().prop('disabled', false);
+                                var select = $('select[name="sample_name"]');
+                                select.empty().prop('disabled', false);
+
+                                $.each(data.samples, function(index, sample) {
+                                    select.append('<option value="' + sample.id + '">' + sample
+                                        .name + '</option>');
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+        })
+        $('select[name=sub_plant_item]').on('change', function() {
+            var tenant_id = $(this).val();
+            if (tenant_id) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_sample_from_plant', ':id') }}".replace(':id',
+                        tenant_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        if (data) {
+                            $('select[name="sample_name"]').empty().prop('disabled', true);
+                            if (data && data.samples && data.samples.length > 0) {
+                                $('select[name="sample_name"]').empty().prop('disabled', false);
+                                var select = $('select[name="sample_name"]');
+                                select.empty().prop('disabled', false);
+
+                                $.each(data.samples, function(index, sample) {
+                                    select.append('<option value="' + sample.id + '">' + sample
+                                        .name + '</option>');
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+        })
+        $('select[name=test_method]').on('change', function() {
+            var tenant_id = $(this).val();
+            if (tenant_id) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_components_by_test_method', ':id') }}".replace(':id',
+                        tenant_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+
+                        if (data) {
+                            //   
+                            if (data && data.components && data.components.length > 0) {
+                                $('select[name="main_components"]').empty().prop('disabled', false);
+                                var select = $('select[name="main_components"]');
+                                select.empty().prop('disabled', false);
+                                select.append(
+                                    '<option value="-1">{{ __('samples.select_component') }}</option>'
+                                );
+                                select.append(
+                                    '<option value="-1">{{ __('samples.select_all_component') }}</option>'
+                                );
+
+                                $.each(data.components, function(index, component) {
+                                    select.append('<option value="' + component.id + '">' +
+                                        component
+                                        .name + '</option>');
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+        })
+        $('select[name=main_components]').on('change', function() {
+            var component_id = $(this).val();
+            var test_method_id = $('select[name=test_method]').val();
+            if (component_id == -1) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_components_by_test_method', ':id') }}".replace(':id',
+                        test_method_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        if (data) {
+                            if (data && data.components && data.components.length > 0) {
+
+
+                                $('#main_components').empty();
+
+                                $.each(data.components, function(index, component) {
+
+                                    $('#main_components').append(`
+                                        <div class="container mt-4">
+                                        <label class="form-label">Components & Limits:</label>
+
+                                        <div class="border border-primary rounded p-3 mb-3"
+                                            style="background-color: #f8f9fa;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div> 
+                                                    <input type="checkbox" id="tds" name="component[${component.id}]" checked>
+                                                    <label for="tds" class="fw-bold text-primary">${component.name}</label>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">Unit:${component.main_unit && component.main_unit.name ? component.main_unit.name : 'N/A'}</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
+                                                    <input type="number"  name="warning_limit[${component.id}]" class="form-control"     onkeyup="only_one_general_change_warning_limit_type(${component.id})">
+                                                    <input type="number"  name="warning_limit_end[${component.id}]" class="form-control d-none"     onkeyup="only_one_general_change_warning_limit_type(${component.id})">
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
+                                                    <input type="number"  name="action_limit[${component.id}]" class="form-control"     onkeyup="only_one_general_change_action_limit_type(${component.id} )">
+                                                    <input type="number"  name="action_limit_end[${component.id}]" class="form-control d-none"     onkeyup="only_one_general_change_action_limit_type(${component.id} )">
+                                                    </div>
+                                            </div>
+                                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
+                                                      <select name="warning_limit_type[${component.id}]" class="form-control"   onchange="only_one_general_change_warning_limit_type(${component.id})">
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option> 
+
+                                                    </select>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
+                                                   
+                                                    <select name="action_limit_type[${component.id}]" class="form-control"   onchange="only_one_general_change_action_limit_type(${component.id})">
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option>
+                                                    </select>
+                                                    </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                        <small class="text-muted d-block">Warning Limit</small>
+                                                        <span class="text-warning fw-bold" id="warning_limit_type[${component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                        <small class="text-muted d-block">Action Limit</small>
+                                                        <span class="text-danger fw-bold" id="action_limit_type[${component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                      `);
+
+
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+
+            } else {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_one_component_by_test_method', ':id') }}".replace(
+                        ':id',
+                        component_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+
+                        if (data) {
+                            if (data && data.component) {
+
+                                $('#main_components').empty();
+
+                                $('#main_components').append(`
+                                        <div class="container mt-4">
+                                        <label class="form-label">Components & Limits:</label>
+
+                                        <div class="border border-primary rounded p-3 mb-3"
+                                            style="background-color: #f8f9fa;">
+                                          
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div> 
+                                                    <input type="checkbox" id="tds" name="component[${data.component.id}]" checked>
+                                                    <label for="tds" class="fw-bold text-primary">${data.component.name}</label>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">Unit:${data.component.main_unit && data.component.main_unit.name ? data.component.main_unit.name : 'N/A'}</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
+                                                    <input type="number"  name="warning_limit[${data.component.id}]" class="form-control"     onkeyup="only_one_change_warning_limit_type(${data.component.id})"> 
+                                                    <input type="number"  name="warning_limit_end[${data.component.id}]" class="form-control d-none"     onkeyup="only_one_change_warning_limit_type(${data.component.id})"> 
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
+                                                    <input type="number"  name="action_limit[${data.component.id}]" class="form-control"     onkeyup="only_one_change_action_limit_type(${data.component.id})">
+                                                    <input type="number"  name="action_limit_end[${data.component.id}]" class="form-control d-none"     onkeyup="only_one_change_action_limit_type(${data.component.id})">
+                                                    </div>
+                                            </div>
+                                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
+                                                      <select name="warning_limit_type[${data.component.id}]" class="form-control"   onchange="only_one_change_warning_limit_type(${data.component.id})">
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option>
+                                                    </select>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
+                                                   
+                                                    <select name="action_limit_type[${data.component.id}]" class="form-control"   onchange="only_one_change_action_limit_type(${data.component.id})">
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option> 
+                                                    </select>
+                                                    </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                        <small class="text-muted d-block">Warning Limit</small>
+                                                        <span class="text-warning fw-bold"  id="warning_limit_type[${data.component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                        <small class="text-muted d-block">Action Limit</small>
+                                                        <span class="text-danger fw-bold" id="action_limit_type[${data.component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                      `);
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+        })
+    </script>
+    <script>
+        function change_action_limit_type(id) {
+            var action_limit_type = document.querySelector('select[name=action_limit_type-' + id + ']').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + id + ']').value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&ge; ' + action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&le; ' + action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&lt; ' + action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&gt; ' + action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&#8646; ' + action_limit;
+                let elements = document.getElementsByName('action_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+
+
+            }
+        }
+
+        function change_warning_limit_type(id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + id + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + id + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&ge; ' + warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&le; ' + warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&lt; ' + warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&gt; ' + warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function only_one_change_action_limit_type(id) {
+            var action_limit_type = document.querySelector('select[name=action_limit_type-' + id + ']').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + id + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end-' + id + ']').value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&ge; ' + action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&le; ' + action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&lt; ' + action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&gt; ' + action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + id).innerHTML = action_limit + ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+
+
+            }
+        }
+
+        function only_one_change_warning_limit_type(id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + id + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + id + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end-' + id + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&ge; ' + warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&le; ' + warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&lt; ' + warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&gt; ' + warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function add_only_one_change_action_limit_type(id, test_method_id) {
+            var action_limit_type = document.querySelector('select[name=action_limit_type-' + test_method_id + '-' + id +
+                ']').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + test_method_id + '-' + id + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end-' + test_method_id + '-' + id + ']')
+                .value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + id).innerHTML = '&ge; ' +
+                    action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + id).innerHTML = '&le; ' +
+                    action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + id).innerHTML = '&lt; ' +
+                    action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + id).innerHTML = '&gt; ' +
+                    action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + id).innerHTML = action_limit +
+                    ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end-' + test_method_id + '-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+
+
+            }
+        }
+
+        function add_only_one_change_warning_limit_type(id, test_method_id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + test_method_id + '-' + id +
+                ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + test_method_id + '-' + id + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end-' + test_method_id + '-' + id +
+                ']').value;
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + id).innerHTML = '&ge; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + id).innerHTML = '&le; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + id).innerHTML = '&lt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + id).innerHTML = '&gt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + id).innerHTML = warning_limit +
+                    ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + test_method_id + '-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function general_change_action_limit_type(compnent_id, index) {
+            var action_limit_type = document.querySelector('select[name="action_limit_type-' + compnent_id + '-' + index +
+                '"]').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + compnent_id + '-' + index + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end-' + compnent_id + '-' + index + ']')
+                .value;
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + compnent_id + '-' + index).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + compnent_id + '-' + index).innerHTML = '&ge; ' +
+                    action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + compnent_id + '-' + index).innerHTML = '&le; ' +
+                    action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + compnent_id + '-' + index).innerHTML = '&lt; ' +
+                    action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + compnent_id + '-' + index).innerHTML = '&gt; ' +
+                    action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + compnent_id + '-' + index).innerHTML = action_limit +
+                    ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end-' + compnent_id + '-' + index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function general_change_warning_limit_type(compnent_id, index) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + compnent_id + '-' + index +
+                ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + compnent_id + '-' + index + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end-' + compnent_id + '-' + index +
+                ']').value;
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + compnent_id + '-' + index).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + compnent_id + '-' + index).innerHTML = '&ge; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + compnent_id + '-' + index).innerHTML = '&le; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + compnent_id + '-' + index).innerHTML = '&lt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + compnent_id + '-' + index).innerHTML = '&gt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + compnent_id + '-' + index).innerHTML = warning_limit +
+                    ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + compnent_id + '-' + index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function add_general_change_action_limit_type(compnent_id, index, test_method_id) {
+            var action_limit_type = document.querySelector('select[name="action_limit_type-' + test_method_id + '-' +
+                compnent_id + '-' + index +
+                '"]').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + test_method_id + '-' + compnent_id +
+                '-' + index + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end-' + test_method_id + '-' +
+                compnent_id +
+                '-' + index + ']').value;
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + compnent_id + '-' + index).innerHTML =
+                    '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + compnent_id + '-' + index).innerHTML =
+                    '&ge; ' +
+                    action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + compnent_id + '-' + index).innerHTML =
+                    '&le; ' +
+                    action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + compnent_id + '-' + index).innerHTML =
+                    '&lt; ' +
+                    action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + compnent_id + '-' + index).innerHTML =
+                    '&gt; ' +
+                    action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + test_method_id + '-' + compnent_id + '-' + index).innerHTML =
+                    action_limit + ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end-' + test_method_id + '-' + compnent_id + '-' +
+                    index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function add_general_change_warning_limit_type(compnent_id, index, test_method_id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + test_method_id + '-' +
+                compnent_id + '-' + index + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + test_method_id + '-' + compnent_id +
+                '-' + index + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end-' + test_method_id + '-' +
+                compnent_id +
+                '-' + index + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&ge; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&le; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&lt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&gt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + test_method_id + '-' + compnent_id + '-' +
+                    index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function only_one_general_change_action_limit_type(compnent_id) {
+            var action_limit_type = document.querySelector('select[name="action_limit_type-' + compnent_id + '"]').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + compnent_id + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end-' + compnent_id + ']').value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + compnent_id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + compnent_id).innerHTML = '&ge; ' + action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + compnent_id).innerHTML = '&le; ' + action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + compnent_id).innerHTML = '&lt; ' + action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + compnent_id).innerHTML = '&gt; ' + action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + compnent_id).innerHTML = action_limit + ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end-' + compnent_id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function only_one_general_change_warning_limit_type(compnent_id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + compnent_id + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + compnent_id + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end-' + compnent_id + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + compnent_id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + compnent_id).innerHTML = '&ge; ' + warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + compnent_id).innerHTML = '&le; ' + warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + compnent_id).innerHTML = '&lt; ' + warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + compnent_id).innerHTML = '&gt; ' + warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + compnent_id).innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + compnent_id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+    </script>
+    <script>
+        let methodIndex = 0;
+
+        function add_test_method() {
+            const container = document.getElementById('test_methods_main');
+            methodIndex++;
+
+            const bladeContent = `
+        <div class="card-body border border-primary" id="test_method-${methodIndex}">
+            <div class="row componants" id="componants-${methodIndex}">
+                <div class="col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label>{{ __('test_method.test_method') }} <span class="text-danger">*</span></label>
+                        <select name="test_method-${methodIndex}" class="form-control" onchange="get_components(this, ${methodIndex})">
+                            <option value="">{{ __('samples.select_test_method') }}</option>
+                            @foreach ($test_methods as $test_method_item)
+                                <option value="{{ $test_method_item->id }}">{{ $test_method_item->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label>{{ __('test_method.component') }} <span class="text-danger">*</span></label>
+                        <select name="components[]" onchange="add_components(this, ${methodIndex})" class="form-control" >
+                            <option value="">{{ __('samples.select_component') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="main_components col-lg-12" id="main_components-${methodIndex}"> 
+                </div>
+            </div>
+
+            <div class="form-group mt-2" style="text-align: {{ session()->get('locale') == 'ar' ? 'left' : 'right' }};">
+                <button type="button" onclick="add_test_method()" class="btn btn-secondary mt-2">
+                    <i class="mdi mdi-plus"></i> {{ __('samples.add_another_test_method') }}
+                </button>
+            </div>
+        </div>
+    `;
+
+            container.insertAdjacentHTML('beforeend', bladeContent);
+        }
+
+        function get_components(element) {
+            var test_method_id = $(element).val();
+            if (test_method_id) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_components_by_test_method', ':id') }}".replace(':id',
+                        test_method_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        if (data && data.components && data.components.length > 0) {
+                            var parentRow = $(element).closest('.row');
+                            var select = parentRow.find('select[name="components[]"]');
+
+                            select.empty().prop('disabled', false);
+                            select.append('<option value="-1">{{ __('samples.select_component') }}</option>');
+                            select.append(
+                                '<option value="-1">{{ __('samples.select_all_component') }}</option>');
+
+                            $.each(data.components, function(index, component) {
+                                select.append('<option value="' + component.id + '">' + component.name +
+                                    '</option>');
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+        }
+    </script>
+    <script>
+        function add_components(element, i) {
+            var component_id = $(element).val();
+            var test_method_id = $('select[name=test_method-' + i + ']').val();
+            if (component_id == -1) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_components_by_test_method', ':id') }}".replace(':id',
+                        test_method_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        if (data) {
+                            if (data && data.components && data.components.length > 0) {
+
+
+                                $('#main_components-' + i).empty();
+
+                                $.each(data.components, function(index, component) {
+
+                                    $('#main_components-' + i).append(`
+                                        <div class="container mt-4">
+                                        <label class="form-label">Components & Limits:</label>
+
+                                        <div class="border border-primary rounded p-3 mb-3"
+                                            style="background-color: #f8f9fa;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div> 
+                                                     <input type="checkbox" id="tds"  name="component-${i}-${component.id}-${index+1}"  checked>
+                                                    <label for="tds" class="fw-bold text-primary">${component.name}</label>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">Unit:${component.main_unit && component.main_unit.name ? component.main_unit.name : 'N/A'}</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
+                                                    <input type="number"  name="warning_limit-${i}-${component.id}-${index+1}" class="form-control"     onkeyup="add_general_change_warning_limit_type(${component.id} , ${index+1} , ${i})">
+                                                    <input type="number"  name="warning_limit_end-${i}-${component.id}-${index+1}" class="form-control d-none"     onkeyup="add_general_change_warning_limit_type(${component.id} , ${index+1} , ${i})">
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
+                                                    <input type="number"  name="action_limit-${i}-${component.id}-${index+1}" class="form-control"      onkeyup="add_general_change_action_limit_type(${component.id} , ${index+1} , ${i})">
+                                                    <input type="number"  name="action_limit_end-${i}-${component.id}-${index+1}" class="form-control d-none"     onkeyup="add_general_change_action_limit_type(${component.id} , ${index+1} , ${i})">
+                                                    </div>
+                                            </div>
+                                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
+                                                      <select name="warning_limit_type-${i}-${component.id}-${index+1}" class="form-control"   onchange="add_general_change_warning_limit_type(${component.id} , ${index+1} , ${i})">
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option> 
+                                                    </select>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
+                                                   
+                                                    <select name="action_limit_type-${i}-${component.id}-${index+1}" class="form-control"   onchange="add_general_change_action_limit_type(${component.id} , ${index+1} , ${i})">
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option> 
+                                                    </select>
+                                                    </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                        <small class="text-muted d-block">Warning Limit</small>
+                                                        <span class="text-warning fw-bold" id="warning_limit_type-${i}-${component.id}-${index+1}"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                        <small class="text-muted d-block">Action Limit</small>
+                                                        <span class="text-danger fw-bold" id="action_limit_type-${i}-${component.id}-${index+1}"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                      `);
+
+
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+
+            } else {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_one_component_by_test_method', ':id') }}".replace(
+                        ':id',
+                        component_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+
+                        if (data) {
+                            if (data && data.component) {
+
+                                $('#main_components-' + i).empty();
+
+                                $('#main_components-' + i).append(`
+                                        <div class="container mt-4">
+                                        <label class="form-label">Components & Limits:</label>
+
+                                        <div class="border border-primary rounded p-3 mb-3"
+                                            style="background-color: #f8f9fa;">
+                                          
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div> 
+                                                     <input type="checkbox" id="tds" name="component-${i}-${data.component.id}" checked>
+                                                    <label for="tds" class="fw-bold text-primary">${data.component.name}</label>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">Unit:${data.component.main_unit && data.component.main_unit.name ? data.component.main_unit.name : 'N/A'}</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
+                                                    <input type="number"  name="warning_limit-${i}-${data.component.id}" class="form-control"     onkeyup="add_only_one_change_warning_limit_type(${data.component.id},${i})"> 
+                                                    <input type="number"  name="warning_limit_end-${i}-${data.component.id}" class="form-control d-none"     onkeyup="add_only_one_change_warning_limit_type(${data.component.id},${i})"> 
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
+                                                    <input type="number"  name="action_limit-${i}-${data.component.id}" class="form-control"     onkeyup="add_only_one_change_action_limit_type(${data.component.id},${i})">
+                                                    <input type="number"  name="action_limit_end-${i}-${data.component.id}" class="form-control d-none"     onkeyup="add_only_one_change_action_limit_type(${data.component.id},${i})">
+                                                    </div>
+                                            </div>
+                                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
+                                                      <select name="warning_limit_type-${i}-${data.component.id}" class="form-control"   onchange="add_only_one_change_warning_limit_type(${data.component.id},${i})">
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option> 
+
+                                                    </select>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
+                                                   
+                                                    <select name="action_limit_type-${i}-${data.component.id}" class="form-control"   onchange="add_only_one_change_action_limit_type(${data.component.id},${i})">
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option> 
+
+                                                    </select>
+                                                    </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                        <small class="text-muted d-block">Warning Limit</small>
+                                                        <span class="text-warning fw-bold"  id="warning_limit_type-${i}-${data.component.id}"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                        <small class="text-muted d-block">Action Limit</small>
+                                                        <span class="text-danger fw-bold" id="action_limit_type-${i}-${data.component.id}"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                      `);
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+        }
+    </script>
+
+    <script>
+        function change_action_limit_type(id) {
+            var action_limit_type = document.querySelector('select[name=action_limit_type-' + id + ']').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + id + ']').value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&ge; ' + action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&le; ' + action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&lt; ' + action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&gt; ' + action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&#8646; ' + action_limit;
+                let elements = document.getElementsByName('action_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+
+
+            }
+        }
+
+        function change_warning_limit_type(id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type-' + id + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit-' + id + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&ge; ' + warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&le; ' + warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&lt; ' + warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = '&gt; ' + warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type-' + id).innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function only_one_change_action_limit_type(id) {
+            var action_limit_type = document.querySelector('select[name=action_limit_type-' + id + ']').value;
+            var action_limit = document.querySelector('input[name=action_limit-' + id + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end-' + id + ']').value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&ge; ' + action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&le; ' + action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&lt; ' + action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type-' + id).innerHTML = '&gt; ' + action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type-' + id).innerHTML = action_limit + ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+
+
+            }
+        }
+
+        function only_one_change_warning_limit_type_old(id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type_old-' + id + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit_old-' + id + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end_old-' + id + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type_old-' + id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type_old-' + id).innerHTML = '&ge; ' + warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type_old-' + id).innerHTML = '&le; ' + warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type_old-' + id).innerHTML = '&lt; ' + warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type_old-' + id).innerHTML = '&gt; ' + warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type_old-' + id).innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end_old-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function add_only_one_change_action_limit_type_old(id, test_method_id) {
+            var action_limit_type = document.querySelector('select[name=action_limit_type_old-' + test_method_id + '-' +
+                id +
+                ']').value;
+            var action_limit = document.querySelector('input[name=action_limit_old-' + test_method_id + '-' + id + ']')
+                .value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end_old-' + test_method_id + '-' + id +
+                    ']')
+                .value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + id).innerHTML = '= ' +
+                    action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&ge; ' +
+                    action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&le; ' +
+                    action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&lt; ' +
+                    action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&gt; ' +
+                    action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + id).innerHTML = action_limit +
+                    ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end_old-' + test_method_id + '-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+
+
+            }
+        }
+
+        function add_only_one_change_warning_limit_type_old(id, test_method_id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type_old-' + test_method_id + '-' +
+                id +
+                ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit_old-' + test_method_id + '-' + id + ']')
+                .value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end_old-' + test_method_id + '-' + id +
+                ']').value;
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + id).innerHTML = '= ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&ge; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&le; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&lt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + id).innerHTML = '&gt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + id).innerHTML = warning_limit +
+                    ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end_old-' + test_method_id + '-' + id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function general_change_action_limit_type_old(compnent_id, index) {
+            var action_limit_type = document.querySelector('select[name="action_limit_type_old-' + compnent_id + '-' +
+                index +
+                '"]').value;
+            var action_limit = document.querySelector('input[name=action_limit_old-' + compnent_id + '-' + index + ']')
+                .value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end_old-' + compnent_id + '-' + index +
+                    ']')
+                .value;
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type_old-' + compnent_id + '-' + index).innerHTML = '= ' +
+                    action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&ge; ' +
+                    action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&le; ' +
+                    action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&lt; ' +
+                    action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&gt; ' +
+                    action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type_old-' + compnent_id + '-' + index).innerHTML = action_limit +
+                    ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end_old-' + compnent_id + '-' + index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function general_change_warning_limit_type_old(compnent_id, index) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type_old-' + compnent_id + '-' +
+                index +
+                ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit_old-' + compnent_id + '-' + index + ']')
+                .value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end_old-' + compnent_id + '-' + index +
+                ']').value;
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type_old-' + compnent_id + '-' + index).innerHTML = '= ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&ge; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&le; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&lt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type_old-' + compnent_id + '-' + index).innerHTML = '&gt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type_old-' + compnent_id + '-' + index).innerHTML = warning_limit +
+                    ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end_old-' + compnent_id + '-' + index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function add_general_change_action_limit_type_old(compnent_id, index, test_method_id) {
+            var action_limit_type = document.querySelector('select[name="action_limit_type_old-' + test_method_id + '-' +
+                compnent_id + '-' + index +
+                '"]').value;
+            var action_limit = document.querySelector('input[name=action_limit_old-' + test_method_id + '-' + compnent_id +
+                '-' + index + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end_old-' + test_method_id + '-' +
+                compnent_id +
+                '-' + index + ']').value;
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML =
+                    '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML =
+                    '&ge; ' +
+                    action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML =
+                    '&le; ' +
+                    action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML =
+                    '&lt; ' +
+                    action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML =
+                    '&gt; ' +
+                    action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML =
+                    action_limit + ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end_old-' + test_method_id + '-' + compnent_id +
+                    '-' +
+                    index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function add_general_change_warning_limit_type_old(compnent_id, index, test_method_id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type_old-' + test_method_id + '-' +
+                compnent_id + '-' + index + ']').value;
+            var warning_limit = document.querySelector('input[name=warning_limit_old-' + test_method_id + '-' +
+                compnent_id +
+                '-' + index + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end_old-' + test_method_id + '-' +
+                compnent_id +
+                '-' + index + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&ge; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&le; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&lt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = '&gt; ' +
+                    warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type_old-' + test_method_id + '-' + compnent_id + '-' + index)
+                    .innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end_old-' + test_method_id + '-' + compnent_id +
+                    '-' +
+                    index);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function only_one_general_change_action_limit_type_old(compnent_id) {
+            var action_limit_type = document.querySelector('select[name="action_limit_type_old-' + compnent_id + '"]')
+                .value;
+            var action_limit = document.querySelector('input[name=action_limit_old-' + compnent_id + ']').value;
+            var action_limit_end = document.querySelector('input[name=action_limit_end_old-' + compnent_id + ']').value;
+
+            if (action_limit_type == '=') {
+                document.getElementById('action_limit_type_old-' + compnent_id).innerHTML = '= ' + action_limit;
+            } else if (action_limit_type == '>=') {
+                document.getElementById('action_limit_type_old-' + compnent_id).innerHTML = '&ge; ' + action_limit;
+            } else if (action_limit_type == '<=') {
+                document.getElementById('action_limit_type_old-' + compnent_id).innerHTML = '&le; ' + action_limit;
+            } else if (action_limit_type == '<') {
+                document.getElementById('action_limit_type_old-' + compnent_id).innerHTML = '&lt; ' + action_limit;
+            } else if (action_limit_type == '>') {
+                document.getElementById('action_limit_type_old-' + compnent_id).innerHTML = '&gt; ' + action_limit;
+            } else if (action_limit_type == '8646') {
+                document.getElementById('action_limit_type_old-' + compnent_id).innerHTML = action_limit + ' &#8646; ' +
+                    action_limit_end;
+                let elements = document.getElementsByName('action_limit_end_old-' + compnent_id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + action_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+
+        function only_one_general_change_warning_limit_type_old(compnent_id) {
+            var warning_limit_type = document.querySelector('select[name=warning_limit_type_old-' + compnent_id + ']')
+                .value;
+            var warning_limit = document.querySelector('input[name=warning_limit_old-' + compnent_id + ']').value;
+            var warning_limit_end = document.querySelector('input[name=warning_limit_end_old-' + compnent_id + ']').value;
+
+            if (warning_limit_type == '=') {
+                document.getElementById('warning_limit_type_old-' + compnent_id).innerHTML = '= ' + warning_limit;
+            } else if (warning_limit_type == '>=') {
+                document.getElementById('warning_limit_type_old-' + compnent_id).innerHTML = '&ge; ' + warning_limit;
+            } else if (warning_limit_type == '<=') {
+                document.getElementById('warning_limit_type_old-' + compnent_id).innerHTML = '&le; ' + warning_limit;
+            } else if (warning_limit_type == '<') {
+                document.getElementById('warning_limit_type_old-' + compnent_id).innerHTML = '&lt; ' + warning_limit;
+            } else if (warning_limit_type == '>') {
+                document.getElementById('warning_limit_type_old-' + compnent_id).innerHTML = '&gt; ' + warning_limit;
+            } else if (warning_limit_type == '8646') {
+                document.getElementById('warning_limit_type_old-' + compnent_id).innerHTML = warning_limit + ' &#8646; ' +
+                    warning_limit_end;
+                let elements = document.getElementsByName('warning_limit_end_old-' + compnent_id);
+                if (elements.length > 0) {
+                    elements[0].innerHTML = '> ' + warning_limit;
+                    elements[0].classList.remove('d-none');
+                }
+            }
+        }
+    </script>
+    <script>
+        function main_components_master(element, id) {
+
+            var component_id = $(element).val();
+            // var test_method_id = $(`select[name=test_method[${id}]`).val();
+            var test_method_id = $(`select[name="test_method[${id}]"]`).val();
+            // console.log(  id);
+            if (component_id == -1) {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_components_by_test_method', ':id') }}".replace(':id',
+                        test_method_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        if (data) {
+                            if (data && data.components && data.components.length > 0) {
+                                //<input type="hidden" name="test_method_item_id[${component.id}]" value="${component.test_method_item_id}">
+
+                                $(`#main_components_${id}`).empty();
+                                console.log((`#main_components_${id}`));
+                                $.each(data.components, function(index, component) {
+                                    console.log(component);
+                                    $(`#main_components_${id}`).append(`
+                                        <div class="container mt-4">
+                                        <label class="form-label">Components & Limits:</label>
+                                            
+
+                                        <div class="border border-primary rounded p-3 mb-3"
+                                            style="background-color: #f8f9fa;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div> 
+                                                    <input type="checkbox" id="tds" value="${component.id}" name="component[${component.id}]" checked>
+                                                    <label for="tds" class="fw-bold text-primary">${component.name}</label>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">Unit:${component.main_unit && component.main_unit.name ? component.main_unit.name : 'N/A'}</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
+                                                    <input type="number"  name="warning_limit[${component.id}]" class="form-control"     onkeyup="only_one_general_change_warning_limit_type(${component.id})">
+                                                    <input type="number"  name="warning_limit_end[${component.id}]" class="form-control d-none"     onkeyup="only_one_general_change_warning_limit_type(${component.id})">
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
+                                                    <input type="number"  name="action_limit[${component.id}]" class="form-control"     onkeyup="only_one_general_change_action_limit_type(${component.id} )">
+                                                    <input type="number"  name="action_limit_end[${component.id}]" class="form-control d-none"     onkeyup="only_one_general_change_action_limit_type(${component.id} )">
+                                                    </div>
+                                            </div>
+                                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
+                                                      <select name="warning_limit_type[${component.id}]" class="form-control"   onchange="only_one_general_change_warning_limit_type(${component.id})">
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option> 
+
+                                                    </select>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
+                                                   
+                                                    <select name="action_limit_type[${component.id}]" class="form-control"   onchange="only_one_general_change_action_limit_type(${component.id})">
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option>
+                                                    </select>
+                                                    </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                        <small class="text-muted d-block">Warning Limit</small>
+                                                        <span class="text-warning fw-bold" id="warning_limit_type[${component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                        <small class="text-muted d-block">Action Limit</small>
+                                                        <span class="text-danger fw-bold" id="action_limit_type[${component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                      `);
+
+
+                                });
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+
+            } else {
+                $.ajax({
+                    url: "{{ route('admin.sample.get_one_component_by_test_method', ':id') }}".replace(
+                        ':id',
+                        component_id),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+
+                        if (data) {
+                            if (data && data.component) {
+
+                                $(`#main_components_${id}`).empty();
+
+                                $(`#main_components_${id}`).append(`
+                                        <div class="container mt-4">
+                                        <label class="form-label">Components & Limits:</label>
+
+                                        <div class="border border-primary rounded p-3 mb-3"
+                                            style="background-color: #f8f9fa;">
+                                            <input type="hidden" name="test_method_item_id[${data.component.id}]" value="${data.component.test_method_item_id}">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div> 
+                                                    <input type="checkbox" id="tds" name="component[${data.component.id}]" checked>
+                                                    <label for="tds" class="fw-bold text-primary">${data.component.name}</label>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">Unit:${data.component.main_unit && data.component.main_unit.name ? data.component.main_unit.name : 'N/A'}</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
+                                                    <input type="number"  name="warning_limit[${data.component.id}]" class="form-control"     onkeyup="only_one_change_warning_limit_type(${data.component.id})"> 
+                                                    <input type="number"  name="warning_limit_end[${data.component.id}]" class="form-control d-none"     onkeyup="only_one_change_warning_limit_type(${data.component.id})"> 
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
+                                                    <input type="number"  name="action_limit[${data.component.id}]" class="form-control"     onkeyup="only_one_change_action_limit_type(${data.component.id})">
+                                                    <input type="number"  name="action_limit_end[${data.component.id}]" class="form-control d-none"     onkeyup="only_one_change_action_limit_type(${data.component.id})">
+                                                    </div>
+                                            </div>
+                                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div>
+                                                    <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
+                                                      <select name="warning_limit_type[${data.component.id}]" class="form-control"   onchange="only_one_change_warning_limit_type(${data.component.id})">
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option> 
+                                                            <option value="8646">&#8646;</option>
+                                                    </select>
+                                                </div>
+                                                <div class="text-end text-primary fw-bold">
+                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
+                                                   
+                                                    <select name="action_limit_type[${data.component.id}]" class="form-control"   onchange="only_one_change_action_limit_type(${data.component.id})">
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
+                                                            <option value="=">=</option> 
+                                                            <option value=">=">&ge;</option> 
+                                                            <option value="<=">&le;</option> 
+                                                            <option value="<">&lt;</option> 
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option> 
+                                                    </select>
+                                                    </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #fff8dc;">
+                                                        <small class="text-muted d-block">Warning Limit</small>
+                                                        <span class="text-warning fw-bold"  id="warning_limit_type[${data.component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="p-3 rounded" style="background-color: #ffeeee;">
+                                                        <small class="text-muted d-block">Action Limit</small>
+                                                        <span class="text-danger fw-bold" id="action_limit_type[${data.component.id}]"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                      `);
+
+                            }
+
+
+                        } else {}
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error occurred:', error);
+                    }
+                });
+            }
+
+        }
+    </script>
+@endsection
