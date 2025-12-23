@@ -54,13 +54,16 @@ return [
     |
     */
 
-   'url' => env('APP_URL', 'http://localhost:8080/MainLims/'),
+   //'url' => env('APP_URL', 'http://localhost:8080/MainLims/'),
 
-   'asset_url' => env('ASSET_URL', 'http://localhost:8080/MainLims/'),
+   //'asset_url' => env('ASSET_URL', 'http://localhost:8080/MainLims/'),
 
-    //  'url' => env('APP_URL', 'https://limsstage.com'),
+//      'url' => env('APP_URL', 'https://limsstage.com'),
 
-    //  'asset_url' =>   'https://limsstage.com/' ,
+  //    'asset_url' =>   'https://limsstage.com/' ,
+	'url' => env('APP_URL'),
+
+	'asset_url' => env('ASSET_URL'),
 
     /*
     |--------------------------------------------------------------------------

@@ -97,7 +97,7 @@
                                     class="badge badge-pill {{ $tenant_items->status == 'active' ? 'badge-success' : 'badge-danger' }}">{{ $tenant_items->status }}</span>
                                 </td>
                                 <td class="text-center">{{ $tenant_items->expire }} </td> 
-                                <td class="text-center">{{ $tenant_items->schema->name }} </td> 
+                                <td class="text-center">{{ $tenant_items->schema?->name ?? translate("Not_Available") }} </td> 
                                 <td class="text-center">{{ $tenant_items->email }} </td> 
                                 <td class="text-center">{{ $tenant_items->phone }} </td> 
                                

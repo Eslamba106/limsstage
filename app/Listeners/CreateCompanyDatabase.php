@@ -33,18 +33,32 @@ class CreateCompanyDatabase
 
         Config::set('database.connections.tenant.database', $db);
         // Log::info('Tenant database created: ' . $db);
-        $dir = new DirectoryIterator(database_path('migrations/tenants'));
-        foreach ($dir as $file) {
-            if ($file->isFile()) {
-                Artisan::call('migrate', [
-                    '--database'        => 'tenant',
-                    '--path'  =>  'database/migrations/tenants/' . $file->getFilename(),
-                    '--force'   => true,
-                ]);
-            };
-        }
+//        $dir = new DirectoryIterator(database_path('migrations/tenants'));
+  //      foreach ($dir as $file) {
+    //        if ($file->isFile()) {
+      //          Artisan::call('migrate', [
+        //            '--database'        => 'tenant',
+          //          '--path'  =>  'database/migrations/tenants/' . $file->getFilename(),
+            //        '--force'   => true,
+              //  ]);
+   //         };
+     //   }
 
-        $this->copyDataToTenantDB($db, $tenant);
+       // $this->copyDataToTenantDB($db, $tenant);
+
+	$files = collect(scandir(database_path('migrations/tenants')))
+    ->filter(fn($f) => str_ends_with($f, '.php'))
+    ->sort()
+    ->values();
+
+foreach ($files as $file) {
+    Artisan::call('migrate', [
+        '--database' => 'tenant',
+        '--path' => 'database/migrations/tenants/' . $file,
+        '--force' => true,
+    ]);
+}
+$this->copyDataToTenantDB($db, $tenant);
     }
 
 

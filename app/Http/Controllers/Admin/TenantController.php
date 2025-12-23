@@ -76,7 +76,7 @@ class TenantController extends Controller
         $tenant                                             = Tenant::create([
             'name'                          => $request->name ?? 0,
             'tenant_id'                     => $request->tenant_id ?? 0,
-            'domain'                        => $request->tenant_id . '.' . $request->getHost(),
+            'domain'                        => $request->tenant_id . '.limsstage.com' ,
             'user_count'                    => $request->user_count ?? 10,
             'setup_cost'                    => $request->setup_cost ?? 0,
             'creation_date'                 => $request->creation_date ?? null,
@@ -180,7 +180,7 @@ class TenantController extends Controller
         $tenant = Tenant::findOrFail($id);
         $tenant->name = $request->name;
         $tenant->tenant_id = $request->tenant_id;
-        $tenant->domain = $request->tenant_id . '.' . $request->getHost(); 
+        $tenant->domain = $request->tenant_id . '.limsstage.com' ; 
         $tenant->tenant_delete_days = $request->tenant_delete_days; 
         $tenant->save();
 

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use App\Services\CurrentTenant;
 
 class SetActiveTenant
 {
@@ -50,7 +51,8 @@ class SetActiveTenant
                 }
             } else {
                 $tenant = Tenant::find(session('tenant_id'));
-                app()->instance('current_tenant', $tenant);
+//                app()->instance('current_tenant', $tenant);
+//app()->instance(CurrentTenant::class, new CurrentTenant($tenant));
             }
         } else {
             Config::set('database.connections.mysql.database', 'lims');
