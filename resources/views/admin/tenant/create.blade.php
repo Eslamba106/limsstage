@@ -61,28 +61,20 @@
                                     <div class="form-group">
                                         <label for="">{{ __('roles.name') }} <span
                                                 class="text-danger">*</span></label>
-                                                <input type="text" name="name" class="form-control" required />
-                                         
+                                        <input type="text" name="name" class="form-control" required />
+
                                         @error('name')
                                             <span class="error text-danger">{{ $message }}</span>
                                         @enderror
                                     </div>
                                 </div>
-                             
+
                                 <div class="col-md-6 col-lg-4 col-xl-3">
                                     <div class="form-group">
-                                        <label for="tenant_id" class="title-color">{{ __('tenants.company_id') }} <span
+                                        <label for="tenant_id" class="title-color">{{ translate('domain_prefix') }} <span
                                                 class="text-danger"> *</span></label>
-                                        <input type="text" class="form-control" required name="tenant_id"   >
+                                        <input type="text" class="form-control" required name="tenant_id">
                                         {{-- <input type="text" class="form-control"  name="tenant_id" value="{{ company_id() }}" > --}}
-                                    </div>
-                                </div>
-                                {{-- <div class="col-md-6 col-lg-4 col-xl-3">
-                                    <div class="form-group">
-                                        <label for="name" class="title-color">{{ __('tenants.user_count') }}<span
-                                                class="text-danger"> *</span>
-                                        </label>
-                                        <input type="text" class="form-control" name="user_count">
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-4 col-xl-3">
@@ -94,6 +86,15 @@
                                         @enderror
                                     </div>
                                 </div>
+                                {{-- <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label for="name" class="title-color">{{ __('tenants.user_count') }}<span
+                                                class="text-danger"> *</span>
+                                        </label>
+                                        <input type="text" class="form-control" name="user_count">
+                                    </div>
+                                </div>
+                                
                                 <div class="col-md-6 col-lg-4 col-xl-3">
                                     <div class="form-group">
                                         <label for="name"
@@ -131,6 +132,46 @@
                                             name="tenant_applicable_date">
                                     </div>
                                 </div> --}}
+                                <div class="col-md-4   col-lg-4">
+                                    <div class="form-group">
+                                        <label for="">{{ translate('schema') }} <span
+                                                class="text-danger">*</span></label>
+                                        <select name="schema_id" class="form-control">
+                                            <option value="">{{ translate('select_schema') }}</option>
+                                            @foreach ($schemas as $schema)
+                                                
+                                            <option value="{{ $schema->id }}">{{ $schema->name }}</option> 
+                                            @endforeach
+                                        </select>
+                                        @error('schema_id')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label class="title-color">{{ translate('delete_data_after_days') }}
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" class="form-control" name="tenant_delete_days"
+                                            value="{{ old('tenant_delete_days' ) }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label class="title-color">{{ translate('Subscription_Ends_At') }}
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" class="form-control" name="expire" 
+                                            value="{{  \Carbon\Carbon::now()->addMonth()->format('Y-m-d')  }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label class="title-color">{{ __('tenants.email') }} </label>
+                                        <input type="text" class="form-control" name="email">
+                                    </div>
+                                </div>
                                 <div class="col-md-6 col-lg-4 col-xl-3">
                                     <div class="form-group">
                                         <label class="title-color">{{ __('tenants.user_name') }}<span class="text-danger">
@@ -138,19 +179,13 @@
                                         <input type="text" class="form-control" name="user_name">
                                     </div>
                                 </div>
-                                {{-- <div class="col-md-6 col-lg-4 col-xl-3">
-                                    <div class="form-group">
-                                        <label class="title-color">{{ __('tenants.email') }}<span class="text-danger">
-                                                *</span></label>
-                                        <input type="text" class="form-control" name="email">
-                                    </div>
-                                </div> --}}
+
                                 <div class="col-md-6 col-lg-4 col-xl-3">
                                     <label class="title-color">{{ __('tenants.password') }}<span class="text-danger">
                                             *</span></label>
-    
+
                                     <div class="form-group input-group input-group-merge">
-    
+
                                         <input type="password" class="js-toggle-password form-control" name="password"
                                             id="signupSrPassword" placeholder="{{ __('8+_characters_required') }}"
                                             aria-label="8+ characters required" required
@@ -169,10 +204,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group mt-2" @if(session()->get('locale') == 'ar')  style="text-align: left;" @else style="text-align: right;" @endif>
+                            <div class="form-group mt-2"
+                                @if (session()->get('locale') == 'ar') style="text-align: left;" @else style="text-align: right;" @endif>
                                 <button type="submit" class="btn btn-primary mt-2">{{ __('dashboard.save') }}</button>
-                              </div>
-                              
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -182,6 +218,4 @@
 @endsection
 @section('js')
     <script src="{{ asset('js/select2.min.js') }}"></script>
-    
-    
 @endsection

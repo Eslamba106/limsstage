@@ -72,6 +72,7 @@
                             <th class="text-center" scope="col">{{ translate('name') }}</th> 
                             <th class="text-center" scope="col">{{ translate('price') }}</th> 
                             <th class="text-center" scope="col">{{ translate('status') }}</th>
+                            <th class="text-center" scope="col">{{ translate('Tenants_Count') }}</th>
                             <th class="text-center" scope="col">{{ translate('Actions') }}</th>
                         </tr>
                     </thead>
@@ -88,8 +89,9 @@
                                 <td class="text-center">{{ $schema_items->name }}</td> 
                                 <td class="text-center">{{ $schema_items->price }} </td> 
                                 <td class="text-center"> <span
-                                        class="badge badge-pill {{ $schema_items->status == 'active' ? 'badge-success' : 'badge-danger' }}">{{ $schema_items->status }}</span>
+                                    class="badge badge-pill {{ $schema_items->status == 'active' ? 'badge-success' : 'badge-danger' }}">{{ $schema_items->status }}</span>
                                 </td>
+                                <td class="text-center">{{ $schema_items->tenants_count }} </td> 
                                  <td class="text-center"  >
                                             {{-- @can('delete_test_method')
                                                 <a href="{{ route('admin.test_method.delete', $test_method->id) }}"

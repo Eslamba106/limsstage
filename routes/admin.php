@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\part\PlantController;
 use App\Http\Controllers\Admin\SchemaController;
 use App\Http\Controllers\Admin\TenantController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\ConversationRequestController;
 use App\Http\Controllers\LandingPageSettingsController;
 
@@ -31,11 +32,9 @@ Route::group(["prefix" => "auth/admin"], function () {
         return view('auth.login-page');
     })->name('admin.login-page');
 Route::group(["prefix" => "admin"], function () {
-    
-    Route::get("dashboard", function () {
-        return view("admin.dashboard.index");
-    })->name("admin.dashboard")->middleware('auth:admins');
-    
+
+    Route::get("dashboard", [DashboardController::class, "index"])->name("admin.dashboard")->middleware('auth:admins');
+
     Route::get('language/{locale}', function ($locale) {
         if (in_array($locale, ['en', 'ar'])) {
             Session::put('locale', $locale);

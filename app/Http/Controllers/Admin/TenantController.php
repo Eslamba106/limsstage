@@ -55,8 +55,11 @@ class TenantController extends Controller
 
     public function create()
     {
-
-        return view("admin.tenant.create");
+        $schemas = Schema::select('id' , 'name')->get();
+        $data = [
+            'schemas' => $schemas,
+        ];
+        return view("admin.tenant.create" , $data);
     }
     public function store(Request $request)
     {
@@ -84,6 +87,9 @@ class TenantController extends Controller
             'status'           => $request->status ?? 'active',
             'phone'            => $request->phone ?? null,
             'email'            => $request->email ?? null,
+             'schema_id'       => $request->schema_id,
+            'tenant_delete_days'            => $request->tenant_delete_days ,
+            'expire'                 => $request->expire ?? carbon::now()->addMonth()->format('Y-m-d'),
         ]);
         $user = User::create([
             'name'             => $request->name ?? null,
@@ -94,7 +100,7 @@ class TenantController extends Controller
             'role_id'          => 2,
             'phone'            => $request->phone ?? null,
             'email'            => $request->email ?? null,
-
+           
         ]);
 
         DB::commit();
@@ -163,7 +169,12 @@ class TenantController extends Controller
             return abort(403);
         }
         $tenant = Tenant::findOrFail($id);
-        return view("admin.tenant.edit", compact("tenant"));
+         $schemas = Schema::select('id' , 'name')->get();
+         $data = [
+             'schemas' => $schemas,
+             'tenant' => $tenant,
+         ];
+        return view("admin.tenant.edit", $data);
     }
 
     public function update(Request $request, $id)
@@ -182,6 +193,10 @@ class TenantController extends Controller
         $tenant->tenant_id = $request->tenant_id;
         $tenant->domain = $request->tenant_id . '.limsstage.com' ; 
         $tenant->tenant_delete_days = $request->tenant_delete_days; 
+        $tenant->schema_id = $request->schema_id;
+        $tenant->phone = $request->phone;
+        $tenant->email = $request->email; 
+
         $tenant->save();
 
 
@@ -193,8 +208,12 @@ class TenantController extends Controller
         (new Tenant())->setConnection('tenant')->where('id', $tenant->id)->update([
             'name'                          => $request->name ?? 0,
             'tenant_id'                     => $request->tenant_id ?? 0,
-            'domain'                        => $request->tenant_id . '.' . $request->getHost(), 
+            'domain'                        => $request->tenant_id . '.' . '.limsstage.com', 
             'tenant_delete_days'            => $request->tenant_delete_days ,
+            'phone'            => $request->phone ?? null,
+            'email'            => $request->email ?? null,
+            'schema_id'            => $request->schema_id,
+            'expire'                 => $request->expire ,
         ]);
         return redirect()->route('admin.tenant_management')->with("success", translate('updated_successfully'));
     }

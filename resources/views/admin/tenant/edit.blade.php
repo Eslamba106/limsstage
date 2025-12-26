@@ -79,6 +79,31 @@
                                             value="{{ old('tenant_id', $tenant->tenant_id) }}">
                                     </div>
                                 </div>
+                                 <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label for="">{{ __('login.phone') }}</label>
+                                        <input type="text" name="phone" class="form-control" value="{{ old('phone',$tenant->phone) }}">
+                                        @error('phone')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                 <div class="col-md-4   col-lg-4">
+                                    <div class="form-group">
+                                        <label for="">{{ translate('schema') }} <span
+                                                class="text-danger">*</span></label>
+                                        <select name="schema_id" class="form-control">
+                                            <option value="">{{ translate('select_schema') }}</option>
+                                            @foreach ($schemas as $schema)
+                                                
+                                            <option {{ ($schema->id == $tenant->schema_id) ? 'selected' : '' }} value="{{ $schema->id }}">{{ $schema->name }}</option> 
+                                            @endforeach
+                                        </select>
+                                        @error('schema_id')
+                                            <span class="error text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
                                 <div class="col-md-6 col-lg-4 col-xl-3">
                                     <div class="form-group">
                                         <label class="title-color">{{ translate('delete_data_after_days') }}
@@ -86,6 +111,21 @@
                                         </label>
                                         <input type="number" class="form-control" name="tenant_delete_days"
                                             value="{{ old('tenant_delete_days', $tenant->tenant_delete_days) }}">
+                                    </div>
+                                </div>
+                                 <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label class="title-color">{{ translate('Subscription_Ends_At') }}
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" class="form-control" name="expire" 
+                                            value="{{  old('expire', $tenant->expire) }}">
+                                    </div>
+                                </div>
+                                 <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="form-group">
+                                        <label class="title-color">{{ __('tenants.email') }} </label>
+                                        <input type="text" class="form-control" name="email" value="{{ old('email' , $tenant->expire) }}">
                                     </div>
                                 </div>
                                 <!-- User Name -->

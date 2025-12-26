@@ -6,7 +6,12 @@
     <div class="scroll-sidebar">
         <nav class="sidebar-nav">
             <ul id="sidebarnav">
-
+                  <li class="sidebar-item">
+                    <a href="{{ route('admin.dashboard') }}" class="sidebar-link">
+                        <i class="fas fa-home"></i>
+                        <span class="hide-menu">{{ translate('dashboard') }}</span>
+                    </a>
+                </li>
                 <li class="sidebar-item">
                     <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"
                         aria-expanded="false">
