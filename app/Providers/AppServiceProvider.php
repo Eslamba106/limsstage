@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,8 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-         if (env('APP_ENV') === 'local') {
-        config(['session.domain' => null]); 
-}
+                Paginator::useBootstrapFour();
+
+        if (env('APP_ENV') === 'local') {
+            config(['session.domain' => null]);
+        }
     }
 }

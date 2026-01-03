@@ -29,7 +29,10 @@ class Tenant extends Model
 
     public static function deactivateExpiredTenants()
     {
-        return self::whereDate('expire', '<=', Carbon::today())
+        return self::where(function ($q) {
+            $q->whereDate('expire', '<=', Carbon::today())
+                ->orWhereNull('expire');
+        })
             ->where('status', '!=', 'inactive')
             ->update(['status' => 'inactive']);
     }

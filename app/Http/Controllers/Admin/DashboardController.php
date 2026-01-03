@@ -16,12 +16,46 @@ class DashboardController extends Controller
         $schemas_count = Schema::count();
         $users_count = User::count();
         $last_tenants = Tenant::latest()->take(5)->get();
+        // $schemas = Schema::latest()->take(5)->get();
+        $schemas = Schema::withCount('tenants')->latest()->get();
+
+        $tenantsByMonth = Tenant::selectRaw('COUNT(*) as count, MONTH(created_at) as month')
+            ->whereYear('created_at', now()->year)
+            ->groupBy('month')
+            ->pluck('count', 'month');
+        $activeTenants  = Tenant::where('expire', '>', now())->count();
+        $expiredTenants = Tenant::where('expire', '<=', now())->count();
+        $tenants = Tenant::select('name', 'expire')
+            ->orderBy('name')
+            ->get();
+
+        $tenantNames = $tenants->pluck('name');
+
+        $tenantStatus = $tenants->map(function ($tenant) {
+            return $tenant->expire > now() ? 1 : 0;
+        });
+
+        $tenantColors = $tenants->map(function ($tenant) {
+            return $tenant->expire > now() ? '#27ae60' : '#c0392b';
+        });
+        $schemaNames = $schemas->pluck('name');        
+        $tenantsCounts = $schemas->pluck('tenants_count'); 
+
         $data = [
             'tenant_counts' => $tenant_counts,
             'schemas_count' => $schemas_count,
             'users_count' => $users_count,
             'last_tenants' => $last_tenants,
             'page_title' => 'Dashboard',
+            'tenantsByMonth' => $tenantsByMonth,
+            'activeTenants' => $activeTenants,
+            'expiredTenants' => $expiredTenants,
+            'tenantNames' => $tenantNames,
+            'tenantStatus' => $tenantStatus,
+            'tenantColors' => $tenantColors,
+            'schemas'       => $schemas,
+            'schemaNames'   => $schemaNames,
+            'tenantsCounts'  => $tenantsCounts,
         ];
 
         return view('admin.dashboard.index', $data);

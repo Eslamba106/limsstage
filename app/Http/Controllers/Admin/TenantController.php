@@ -28,19 +28,14 @@ class TenantController extends Controller
 {
     use AuthorizesRequests;
     public function index(Request $request)
-    {
-
-        // $this->authorize('tenant_management');
-
-        Tenant::deactivateExpiredTenants();
-
+    { 
+        Tenant::deactivateExpiredTenants(); 
         $ids = $request->bulk_ids;
         $now = Carbon::now()->toDateTimeString();
         if ($request->bulk_action_btn === 'update_status' && $request->status && is_array($ids) && count($ids)) {
-            $data = ['status' => $request->status]; 
-
+            $data = ['status' => $request->status , 'expire' => Carbon::today()->addMonth(), ];  
             Tenant::whereIn('id', $ids)->update($data);
-            return back()->with('success', __('general.updated_successfully'));
+            return back()->with('success', translate('updated_successfully'));
         }
         if ($request->bulk_action_btn === 'delete' &&  is_array($ids) && count($ids)) {
 
@@ -50,7 +45,12 @@ class TenantController extends Controller
         }
 
         $tenants = Tenant::orderBy("created_at", "desc")->paginate(10);
-        return view("admin.tenant.tenant_list", compact("tenants"));
+        $data = [
+            'tenants'   => $tenants,
+        ];
+        
+
+        return view("admin.tenant.tenant_list", $data );
     }
  
 

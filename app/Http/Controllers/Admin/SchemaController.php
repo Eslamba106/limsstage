@@ -171,4 +171,9 @@ class SchemaController extends Controller
         $schemas = Schema::orderBy("created_at", "desc")->paginate(10);
         return Json::encode($schemas); 
     }
+
+    public function show($id){
+             $schema = Schema::findOrFail($id);
+          
+    }
 }

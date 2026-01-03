@@ -276,10 +276,8 @@
                                             {{ $tenant->schema?->name ?? translate('Not_Available') }} </td>
                                         <td class="text-center">{{ $tenant->email }} </td>
                                         <td class="text-center">{{ $tenant->phone }} </td>
-                                        <td class="text-center">{{ $user->user_name }} </td>
-                                        <td class="text-center">{{ $user->my_name }} </td>
-
-                                      
+                                        <td class="text-center">{{ $user?->user_name }} </td>
+                                        <td class="text-center">{{ $user?->my_name }} </td> 
                                     </tr> 
 
 
