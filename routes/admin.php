@@ -56,6 +56,7 @@ Route::group(["prefix" => "admin"], function () {
         Route::get("/create", [SchemaController::class, "create"])->name("admin.schema.create")->middleware('auth:admins');
         Route::post("/store", [SchemaController::class, "store"])->name("admin.schema.store")->middleware('auth:admins');
         Route::get("/edit/{id}", [SchemaController::class, "edit"])->name("admin.schema.edit")->middleware('auth:admins');
+        Route::get("/show/{id}", [SchemaController::class, "show"])->name("admin.schema.show")->middleware('auth:admins');
         Route::patch("/update/{id}", [SchemaController::class, "update"])->name("admin.schema.update")->middleware('auth:admins');
     });
     Route::group(["prefix" => "landing_page_settings"], function () {

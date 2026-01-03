@@ -173,7 +173,56 @@ class SchemaController extends Controller
     }
 
     public function show($id){
-             $schema = Schema::findOrFail($id);
-          
+        $schema = Schema::with('tenants')->findOrFail($id);
+        $tenant_counts = $schema->tenants()->count(); 
+          $modules = [
+        'scan_barcode' => 'Scan Barcode',
+        'test_method_management' => 'Test Method Management',
+        'unit' => 'Unit',
+        'result_types' => 'Result Types',
+        'sample_management' => 'Sample Management',
+        'assig_test_to_sample' => 'Assign Test to Sample',
+        'plants' => 'Plants',
+        'create_sample' => 'Create Sample',
+        'toxic_degree' => 'Toxic Degree',
+        'submissions_management' => 'Submissions Management',
+        'sample_routine_scheduler' => 'Sample Routine Scheduler',
+        'frequencies' => 'Frequencies',
+        'results' => 'Results',
+        'template_designer_list' => 'Template Designer',
+        'coa_generation_settings' => 'COA Generation Settings',
+        'certificate_management' => 'Certificate Management',
+        'emails' => 'Emails',
+        'users' => 'Users',
+        'clients' => 'Clients',
+        'roles' => 'Roles',
+        'system_setup' => 'System Setup',
+    ];
+            $countFields = [
+            'test_method_count' => 'Test Method Count',
+            'unit_count' => 'Unit Count',
+            'result_types_count' => 'Result Types Count',
+            'sample_count' => 'Sample Count',
+            'plants_count' => 'Plants Count',
+            'create_sample_count' => 'Create Sample Count',
+            'toxic_degree_count' => 'Toxic Degree Count',
+            'submissions_count' => 'Submissions Count',
+            'sample_routine_scheduler_count' => 'Sample Routine Scheduler Count',
+            'frequencies_count' => 'Frequencies Count',
+            'results_count' => 'Results Count',
+            'template_designer_count' => 'Template Designer Count',
+            'coa_generation_settings_count' => 'COA Generation Settings Count',
+            'certificate_count' => 'Certificate Count',
+            'emails_count' => 'Emails Count',
+            'users_count' => 'Users Count',
+            'clients_count' => 'Clients Count',
+        ];
+        $data = [
+            'schema'                => $schema,
+            'tenant_counts'         => $tenant_counts,
+            'modules'               => $modules,
+            'countFields'           => $countFields,
+        ];
+        return view('admin.schema.show' , $data);
     }
 }
