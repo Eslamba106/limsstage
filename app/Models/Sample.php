@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Prunable;
 class Sample extends Model
 {
     use HasFactory;
-   use SoftDeletes;
+//    
     use Prunable;
    public function prunable()
     {

@@ -150,7 +150,7 @@
                             </thead>
                             <tbody>
                                 @forelse ($last_tenants as $tenant_items)
-                                    <tr>
+                                                                    <tr @if (\Carbon\Carbon::parse($tenant_items->expire) <= now()->addDays(2)) style="background-color: red;color:white" @endif>
                                         <th scope="row">
                                             <label>
                                                 <input class="check_bulk_item" name="bulk_ids[]" type="checkbox"

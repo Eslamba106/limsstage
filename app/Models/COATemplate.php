@@ -10,7 +10,7 @@ class COATemplate extends Model
 {
     use HasFactory;
 
-   use SoftDeletes;
+   
     use Prunable;
    public function prunable()
     {

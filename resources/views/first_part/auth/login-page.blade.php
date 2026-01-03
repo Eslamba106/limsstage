@@ -10,7 +10,7 @@
     <meta name="author" content="">
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset(main_path().'assets/images/main_logo.jpg') }}">
-    <title>{{ __('login.login') }}</title>
+    <title>{{ translate('login') }}</title>
     <!-- Custom CSS -->
     <link href="{{ asset(main_path().'dist/css/style.min.css') }}" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
@@ -46,10 +46,10 @@
             $isAdmin = false;
 
             $parts = explode('.', $host);
- 
-            if (count($parts) > 2) {
+            if (count($parts) >= 2) {
                 $isSubdomain = true;
                 $subdomain = $parts[0];
+                // dd($subdomain);
 
                 if ($subdomain === 'admin') { 
                     $isAdmin = true;

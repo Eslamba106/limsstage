@@ -47,6 +47,7 @@ Route::group(["prefix" => "admin"], function () {
         Route::post("register_tenant", [TenantController::class, "register"])->name("admin.tenant_management.register_tenant");
         Route::get("create", [TenantController::class, "create"])->name("admin.tenant_management.create")->middleware('auth:admins');
         Route::get("edit/{id}", [TenantController::class, "edit"])->name("admin.tenant_management.edit")->middleware('auth:admins');
+        Route::get("show/{id}", [TenantController::class, "show"])->name("admin.tenant_management.show")->middleware('auth:admins');
         Route::post("update/{id}", [TenantController::class, "update"])->name("admin.tenant_management.update")->middleware('auth:admins');
         Route::get("delete", [TenantController::class, "delete"])->name("admin.tenant_management.delete")->middleware('auth:admins');
     });

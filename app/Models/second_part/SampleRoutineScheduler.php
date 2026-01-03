@@ -15,7 +15,7 @@ class SampleRoutineScheduler extends Model
     protected $guarded    = ['id'];
     protected $connection = 'tenant';
 
-   use SoftDeletes;
+   
     use Prunable;
    public function prunable()
     {

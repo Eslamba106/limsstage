@@ -5,15 +5,22 @@ namespace App\Http\Controllers\Admin;
 use Throwable;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Sample;
 use App\Models\Schema;
 use App\Models\Tenant;
 use App\helper\Helpers;
+use App\Models\part\Unit;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Events\CompanyCreated;
+use App\Models\part\ResultType;
+use App\Models\part_three\Result;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use App\Models\first_part\TestMethod;
+use App\Models\second_part\SampleRoutineScheduler;
+use App\Models\second_part\Submission;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -25,7 +32,7 @@ class TenantController extends Controller
 
         // $this->authorize('tenant_management');
 
-    Tenant::deactivateExpiredTenants();
+        Tenant::deactivateExpiredTenants();
 
         $ids = $request->bulk_ids;
         $now = Carbon::now()->toDateTimeString();
@@ -45,13 +52,7 @@ class TenantController extends Controller
         $tenants = Tenant::orderBy("created_at", "desc")->paginate(10);
         return view("admin.tenant.tenant_list", compact("tenants"));
     }
-    // public function edit($id){
-    //     $this->authorize('edit_driver');
-    //     $driver = Driver::findOrFail($id);
-    //     $countries = Countries::select('id', 'name' , 'nationality')->get();
-    //     $dail_code_main = Countries::select('id', 'dial_code')->get();
-    //     return view("general.drivers.edit", compact("driver", "countries" ,'dail_code_main'));
-    // }
+ 
 
     public function create()
     {
@@ -223,7 +224,40 @@ class TenantController extends Controller
         $schema = Schema::findOrFail($id);
         return view("admin.tenant.register", compact("schema"));
     }
-
+    public function show($id)
+    {
+        $tenant = Tenant::findOrFail($id);
+        DB::purge('tenant');
+        Config::set('database.connections.tenant.database', 'lims_' . $tenant->id);
+        DB::reconnect('tenant'); 
+        $users_count = User::on('tenant')->count(); 
+        $samples_count = Sample::on('tenant')->count(); 
+        $test_method_count = TestMethod::on('tenant')->count(); 
+        $submission_count = Submission::on('tenant')->count();
+        $units_count = Unit::on('tenant')->count();
+        $result_count = Result::on('tenant')->count();
+        $result_type_count = ResultType::on('tenant')->count();
+        $result_pending = Result::on('tenant')->where('status' , 'pending')->count();
+        $result_completed = Result::on('tenant')->where('status' ,'!=', 'pending')->count();
+        $schesules_count = SampleRoutineScheduler::on('tenant')->count();
+        $user = User::on('tenant')->first();
+        $data = [ 
+            'users_count' => $users_count,  
+            'samples_count' => $samples_count,  
+            'test_method_count' => $test_method_count,  
+            'submission_count' => $submission_count,  
+            'units_count'       => $units_count,
+            'result_count'      => $result_count,
+            'result_type_count' => $result_type_count,
+            'result_pending'    => $result_pending,
+            'result_completed'  => $result_completed,
+            'schesules_count'   => $schesules_count,
+            'tenant'            => $tenant,
+            'user'              => $user,
+        ];
+        
+        return view("admin.tenant.show", $data);
+    }
 
     
 }

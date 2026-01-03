@@ -111,6 +111,9 @@
                                         <a href="{{ route('admin.tenant_management.edit', $tenant_items->id) }}"
                                             class="btn btn-outline-info btn-sm" title="@lang('dashboard.edit')"><i
                                                 class="mdi mdi-pencil"></i> </a>
+                                        <a href="{{ route('admin.tenant_management.show', $tenant_items->id) }}"
+                                            class="btn btn-outline-info btn-sm" title="{{ translate('show') }}"><i
+                                                class="mdi mdi-eye"></i> </a>
                                     {{-- @endcan --}}
                                 </td>
                             </tr>

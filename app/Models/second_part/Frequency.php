@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Frequency extends Model
 {
     use HasFactory;
-    use SoftDeletes;
+    
     use Prunable;
     public function prunable()
     {

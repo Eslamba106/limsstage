@@ -13,7 +13,7 @@ class SampleTestMethod extends Model
 {
     use HasFactory;
     protected $guarded = [];
-    use SoftDeletes;
+    
     use Prunable;
     public function prunable()
     {

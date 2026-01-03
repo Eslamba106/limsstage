@@ -23,13 +23,12 @@ class AuthController extends Controller
                 'domain' => 'required',
                 // 'user_name' => 'required',
                 // 'password' => 'required',
-            ]);
-    
+            ]);   
             $tenant = (new Tenant())
                 ->where('tenant_id', $request->tenant_id)
                 ->where('domain', $request->domain)
                 ->first();
-    
+            // dd(  $request->all());
             if (!$tenant) {
                 return redirect()->back()->with('error', __('login.tenant_not_found'));
             }  
