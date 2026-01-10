@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Title -->
-    <title>Lims Stage Platform</title>
+    <title>@yield('title' , "Lims Stage Platform")</title>
 
     <!-- Meta Description -->
     <meta name="description" content="منصة تعليمية تقدم محتوى علمي، دورات تدريبية، وشروحات مميزة للطلاب والمتعلمين.">
