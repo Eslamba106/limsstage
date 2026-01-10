@@ -124,8 +124,8 @@
                                 </div>
                                  <div class="col-md-6 col-lg-4 col-xl-3">
                                     <div class="form-group">
-                                        <label class="title-color">{{ __('tenants.email') }} </label>
-                                        <input type="text" class="form-control" name="email" value="{{ old('email' , $tenant->expire) }}">
+                                        <label class="title-color">{{ translate('tenants.email') }} </label>
+                                        <input type="email" class="form-control" name="email" value="{{ old('email' , $tenant->email) }}">
                                     </div>
                                 </div>
                                 <!-- User Name -->
