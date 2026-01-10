@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\part\PlantController;
 use App\Http\Controllers\Admin\SchemaController;
 use App\Http\Controllers\Admin\TenantController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\ConversationRequestController;
 use App\Http\Controllers\LandingPageSettingsController;
@@ -58,6 +59,14 @@ Route::group(["prefix" => "admin"], function () {
         Route::get("/edit/{id}", [SchemaController::class, "edit"])->name("admin.schema.edit")->middleware('auth:admins');
         Route::get("/show/{id}", [SchemaController::class, "show"])->name("admin.schema.show")->middleware('auth:admins');
         Route::patch("/update/{id}", [SchemaController::class, "update"])->name("admin.schema.update")->middleware('auth:admins');
+    });
+    Route::group(["prefix" => "payment"], function () {
+        Route::get("/", [PaymentController::class, "list"])->name("admin.payment")->middleware('auth:admins');
+        Route::get("/create", [PaymentController::class, "create"])->name("admin.payment.create")->middleware('auth:admins');
+        Route::post("/store", [PaymentController::class, "store"])->name("admin.payment.store")->middleware('auth:admins');
+        Route::get("/edit/{id}", [PaymentController::class, "edit"])->name("admin.payment.edit")->middleware('auth:admins');
+        Route::get("/show/{id}", [PaymentController::class, "show"])->name("admin.payment.show")->middleware('auth:admins');
+        Route::patch("/update/{id}", [PaymentController::class, "update"])->name("admin.payment.update")->middleware('auth:admins');
     });
     Route::group(["prefix" => "landing_page_settings"], function () {
         Route::get("/", [LandingPageSettingsController::class, "list"])->name("admin.landing_page_settings")->middleware('auth:admins');

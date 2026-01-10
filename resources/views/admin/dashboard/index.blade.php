@@ -85,6 +85,25 @@
                     </div>
                 </div>
             </div>
+            <!-- Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="m-r-10">
+                            <span class="btn btn-circle btn-lg bg-warning">
+                                <i class="fas fa-file-invoice-dollar text-white"></i>
+                            </span>
+                        </div>
+                        <div>
+                            {{ translate('Total_Income') }}
+
+                        </div>
+                        <div class="ml-auto">
+                            <h2 class="m-b-0 font-light">{{ $amounts . ' SAR' }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
         <div class="row">
@@ -112,6 +131,69 @@
                         <canvas id="schemasChart" height="200"></canvas>
                     </div>
                 </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ translate('Payments') }}</h4>
+                        <h5 class="card-subtitle">{{ translate('Overview_of_Payments') }}</h5>
+
+                        <canvas id="paymentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                     <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th><input class="bulk_check_all" type="checkbox" /></th>
+                            <th class="text-center" scope="col">{{ translate('tenant') }}</th>
+                            <th class="text-center" scope="col">{{ translate('amount') }}</th>
+                            <th class="text-center" scope="col">{{ translate('currency') }}</th>
+                            <th class="text-center" scope="col">{{ translate('payment_date') }}</th>
+                            <th class="text-center" scope="col">{{ translate('transaction_reference') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($payments as $payment)
+                        <!-- 
+                        
+                        `user_id`, `amount`, `payment_method`, `payment_date`, `status`, 
+                        `transaction_id`, `notes`, `currency`, `transaction_reference`,
+                        -->
+                            <tr>
+                                <th scope="row">
+                                    <label>
+                                        <input class="check_bulk_item" name="bulk_ids[]" type="checkbox"
+                                            value="{{ $payment->id }}" />
+                                        <span class="text-muted">#{{ $payment->id }}</span>
+                                    </label>
+                                </th>
+                                <td class="text-center">{{ $payment->tenant?->name }}</td>
+                                <td class="text-center">{{ $payment->amount }} </td>
+                                <td class="text-center">{{ $payment->currency }}</td>
+                                {{-- <td class="text-center">
+                                    @if ($payment->status == 'paid')
+                                        <span class="badge badge-success">{{ translate('paid') }}</span>
+                                    @else
+                                        <span class="badge badge-danger">{{ translate('unpaid') }}</span>
+                                    @endif
+                                </td> --}}
+                                {{-- <td class="text-center">{{ $payment->payment_method }}</td> --}}
+                                <td class="text-center">{{ $payment->payment_date }}</td>
+                                {{-- <td class="text-center">{{ $payment->transaction_id }}</td> --}}
+                                <td class="text-center">{{ $payment->transaction_reference }}</td>
+                                
+
+                               
+                             
+                            </tr>
+                        @empty
+                        @endforelse
+
+
+                    </tbody>
+                </table>
             </div>
 
         </div>
@@ -330,38 +412,66 @@
         });
     </script>
     <script>
-    const ctx = document.getElementById('schemasChart').getContext('2d');
-    const schemasChart = new Chart(ctx, {
-        type: 'bar', 
+        const ctx = document.getElementById('schemasChart').getContext('2d');
+        const schemasChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @json($schemaNames),
+                datasets: [{
+                    label: '{{ translate('Tenants_Count') }}',
+                    data: @json($tenantsCounts),
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: '{{ translate('Schemas Overview') }}'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stepSize: 1
+                    }
+                }
+            }
+        });
+    </script>
+ <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('paymentsChart');
+
+    if (!ctx) return;
+
+    new Chart(ctx, {
+        type: 'bar',
         data: {
-            labels: @json($schemaNames),  
+            labels: @json($months),
             datasets: [{
-                label: '{{ translate("Tenants_Count") }}',
-                data: @json($tenantsCounts),  
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
+                label: 'Payments per Month',
+                data: @json($totals),
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                title: {
-                    display: true,
-                    text: '{{ translate("Schemas Overview") }}'
-                }
-            },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    stepSize: 1
+                    beginAtZero: true
                 }
             }
         }
     });
+});
 </script>
+
 @endsection

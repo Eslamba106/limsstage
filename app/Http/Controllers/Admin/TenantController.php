@@ -9,6 +9,7 @@ use App\Models\Sample;
 use App\Models\Schema;
 use App\Models\Tenant;
 use App\helper\Helpers;
+use App\Models\Payment;
 use App\Models\part\Unit;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -19,22 +20,24 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\first_part\TestMethod;
-use App\Models\second_part\SampleRoutineScheduler;
 use App\Models\second_part\Submission;
 use Illuminate\Support\Facades\Config;
+use App\Models\second_part\SampleRoutineScheduler;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TenantController extends Controller
 {
     use AuthorizesRequests;
     public function index(Request $request)
-    { 
-        Tenant::deactivateExpiredTenants(); 
+    {
+        Tenant::deactivateExpiredTenants();
         $ids = $request->bulk_ids;
         $now = Carbon::now()->toDateTimeString();
         if ($request->bulk_action_btn === 'update_status' && $request->status && is_array($ids) && count($ids)) {
-            $data = ['status' => $request->status , 'expire' => Carbon::today()->addMonth(), ];  
-            Tenant::whereIn('id', $ids)->update($data);
+            $data = ['status' => $request->status, 'expire' => Carbon::today()->addMonth(),];
+
+            $this->update_tenants_status($data , $ids);
+
             return back()->with('success', translate('updated_successfully'));
         }
         if ($request->bulk_action_btn === 'delete' &&  is_array($ids) && count($ids)) {
@@ -48,19 +51,19 @@ class TenantController extends Controller
         $data = [
             'tenants'   => $tenants,
         ];
-        
 
-        return view("admin.tenant.tenant_list", $data );
+
+        return view("admin.tenant.tenant_list", $data);
     }
- 
+
 
     public function create()
     {
-        $schemas = Schema::select('id' , 'name')->get();
+        $schemas = Schema::select('id', 'name')->get();
         $data = [
             'schemas' => $schemas,
         ];
-        return view("admin.tenant.create" , $data);
+        return view("admin.tenant.create", $data);
     }
     public function store(Request $request)
     {
@@ -80,7 +83,7 @@ class TenantController extends Controller
         $tenant                                             = Tenant::create([
             'name'                          => $request->name ?? 0,
             'tenant_id'                     => $request->tenant_id ?? 0,
-            'domain'                        => $request->tenant_id . '.limsstage.com' ,
+            'domain'                        => $request->tenant_id . '.limsstage.com',
             'user_count'                    => $request->user_count ?? 10,
             'setup_cost'                    => $request->setup_cost ?? 0,
             'creation_date'                 => $request->creation_date ?? null,
@@ -88,8 +91,8 @@ class TenantController extends Controller
             'status'           => $request->status ?? 'active',
             'phone'            => $request->phone ?? null,
             'email'            => $request->email ?? null,
-             'schema_id'       => $request->schema_id,
-            'tenant_delete_days'            => $request->tenant_delete_days ,
+            'schema_id'       => $request->schema_id,
+            'tenant_delete_days'            => $request->tenant_delete_days,
             'expire'                 => $request->expire ?? carbon::now()->addMonth()->format('Y-m-d'),
         ]);
         $user = User::create([
@@ -101,7 +104,7 @@ class TenantController extends Controller
             'role_id'          => 2,
             'phone'            => $request->phone ?? null,
             'email'            => $request->email ?? null,
-           
+
         ]);
 
         DB::commit();
@@ -115,9 +118,9 @@ class TenantController extends Controller
     public function register(Request $request)
     {
         // dd($request->all());
-         $request->validate([
+        $request->validate([
             'name'             => 'required|string|max:255',
-            'tenant_id'         => 'required|unique:tenants,tenant_id', 
+            'tenant_id'         => 'required|unique:tenants,tenant_id',
             'user_name'        => 'required|string|max:50',
             'password'         => 'nullable|string|min:5',
         ]);
@@ -157,7 +160,7 @@ class TenantController extends Controller
             //     return redirect()->away("http://{$request->tenant_id}.limsstage.com")
             //         ->with("success", __('general.added_successfully'));
             // }
-            return redirect()->route('payment.page' , [$request->schema_id ,'tenant_id'=>$tenant->id ])->with("success", translate('general.added_successfully'));
+            return redirect()->route('payment.page', [$request->schema_id, 'tenant_id' => $tenant->id])->with("success", translate('general.added_successfully'));
         } catch (Throwable $th) {
             DB::rollBack();
             return redirect()->back()->with('error', $th->getMessage());
@@ -166,37 +169,37 @@ class TenantController extends Controller
 
     public function edit($id)
     {
-        if(!Helpers::module_check('edit_tenant')){
+        if (!Helpers::module_check('edit_tenant')) {
             return abort(403);
         }
         $tenant = Tenant::findOrFail($id);
-         $schemas = Schema::select('id' , 'name')->get();
-         $data = [
-             'schemas' => $schemas,
-             'tenant' => $tenant,
-         ];
+        $schemas = Schema::select('id', 'name')->get();
+        $data = [
+            'schemas' => $schemas,
+            'tenant' => $tenant,
+        ];
         return view("admin.tenant.edit", $data);
     }
 
     public function update(Request $request, $id)
     {
-        if(!Helpers::module_check('edit_tenant')){
+        if (!Helpers::module_check('edit_tenant')) {
             return abort(403);
         }
         $validatedData = $request->validate([
             'name'             => 'required|string|max:255',
-            'tenant_id'         => 'required|unique:tenants,tenant_id,' . $id, 
-            'tenant_delete_days'            => 'required|integer',  
+            'tenant_id'         => 'required|unique:tenants,tenant_id,' . $id,
+            'tenant_delete_days'            => 'required|integer',
         ]);
 
         $tenant = Tenant::findOrFail($id);
         $tenant->name = $request->name;
         $tenant->tenant_id = $request->tenant_id;
-        $tenant->domain = $request->tenant_id . '.limsstage.com' ; 
-        $tenant->tenant_delete_days = $request->tenant_delete_days; 
+        $tenant->domain = $request->tenant_id . '.limsstage.com';
+        $tenant->tenant_delete_days = $request->tenant_delete_days;
         $tenant->schema_id = $request->schema_id;
         $tenant->phone = $request->phone;
-        $tenant->email = $request->email; 
+        $tenant->email = $request->email;
 
         $tenant->save();
 
@@ -209,12 +212,12 @@ class TenantController extends Controller
         (new Tenant())->setConnection('tenant')->where('id', $tenant->id)->update([
             'name'                          => $request->name ?? 0,
             'tenant_id'                     => $request->tenant_id ?? 0,
-            'domain'                        => $request->tenant_id . '.' . '.limsstage.com', 
-            'tenant_delete_days'            => $request->tenant_delete_days ,
+            'domain'                        => $request->tenant_id . '.' . '.limsstage.com',
+            'tenant_delete_days'            => $request->tenant_delete_days,
             'phone'            => $request->phone ?? null,
             'email'            => $request->email ?? null,
             'schema_id'            => $request->schema_id,
-            'expire'                 => $request->expire ,
+            'expire'                 => $request->expire,
         ]);
         return redirect()->route('admin.tenant_management')->with("success", translate('updated_successfully'));
     }
@@ -229,23 +232,23 @@ class TenantController extends Controller
         $tenant = Tenant::findOrFail($id);
         DB::purge('tenant');
         Config::set('database.connections.tenant.database', 'lims_' . $tenant->id);
-        DB::reconnect('tenant'); 
-        $users_count = User::on('tenant')->count(); 
-        $samples_count = Sample::on('tenant')->count(); 
-        $test_method_count = TestMethod::on('tenant')->count(); 
+        DB::reconnect('tenant');
+        $users_count = User::on('tenant')->count();
+        $samples_count = Sample::on('tenant')->count();
+        $test_method_count = TestMethod::on('tenant')->count();
         $submission_count = Submission::on('tenant')->count();
         $units_count = Unit::on('tenant')->count();
         $result_count = Result::on('tenant')->count();
         $result_type_count = ResultType::on('tenant')->count();
-        $result_pending = Result::on('tenant')->where('status' , 'pending')->count();
-        $result_completed = Result::on('tenant')->where('status' ,'!=', 'pending')->count();
+        $result_pending = Result::on('tenant')->where('status', 'pending')->count();
+        $result_completed = Result::on('tenant')->where('status', '!=', 'pending')->count();
         $schesules_count = SampleRoutineScheduler::on('tenant')->count();
         $user = User::on('tenant')->first();
-        $data = [ 
-            'users_count' => $users_count,  
-            'samples_count' => $samples_count,  
-            'test_method_count' => $test_method_count,  
-            'submission_count' => $submission_count,  
+        $data = [
+            'users_count' => $users_count,
+            'samples_count' => $samples_count,
+            'test_method_count' => $test_method_count,
+            'submission_count' => $submission_count,
             'units_count'       => $units_count,
             'result_count'      => $result_count,
             'result_type_count' => $result_type_count,
@@ -255,9 +258,36 @@ class TenantController extends Controller
             'tenant'            => $tenant,
             'user'              => $user,
         ];
-        
+
         return view("admin.tenant.show", $data);
     }
+    public function update_tenants_status($data , $ids){
+           $tenants = Tenant::whereIn('id', $ids)->get();
 
-    
+            $schemaIds = $tenants->pluck('schema_id')->unique();
+
+            $schemas = Schema::select('id', 'price', 'currency')
+                ->whereIn('id', $schemaIds)
+                ->get()
+                ->keyBy('id');  
+
+            $tenants->each(function ($tenant) use ($data, $schemas) {
+
+                $tenant->update($data);
+
+                $schema = $schemas->get($tenant->schema_id);
+
+                Payment::create([
+                    'user_id' => $tenant->id,
+                    'amount' => $schema->price ?? 0,
+                    'currency' =>  'SAR',
+                    'payment_method' => 'admin_update',
+                    'payment_date' => Carbon::now(),
+                    'status' => 'completed',
+                    'transaction_id' => (string) Str::uuid(),
+                    'notes' => 'Payment recorded by admin during status update.',
+                    'transaction_reference' => 'REF-' . Str::upper(Str::random(10)),
+                ]);
+            });
+    }
 }

@@ -17,14 +17,14 @@
                         aria-expanded="false">
                         <i class="fa fa-users"></i>
 
-                        <span class="hide-menu">{{ __('roles.tenant_management') }} </span>
+                        <span class="hide-menu">{{ translate('tenant_management') }} </span>
                     </a>
 
                     <ul aria-expanded="false" class="collapse  first-level">
                         <li class="sidebar-item">
                             <a href="{{ route('admin.tenant_management') }}" class="sidebar-link">
                                 <i class="mdi mdi-email"></i>
-                                <span class="hide-menu">{{ __('roles.all_tenants') }}</span>
+                                <span class="hide-menu">{{ translate('all_tenants') }}</span>
                             </a>
                         </li>
 
@@ -34,6 +34,12 @@
                     <a href="{{ route('admin.schema') }}" class="sidebar-link">
                         <i class="fas fa-project-diagram"></i>
                         <span class="hide-menu">{{ translate('Plans') }}</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ route('admin.payment') }}" class="sidebar-link">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span class="hide-menu">{{ translate('Payment_History') }}</span>
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -47,7 +53,7 @@
                     <a class="sidebar-link waves-effect waves-dark sidebar-link" href="{{ route('admin.logout') }}"
                         aria-expanded="false">
                         <i class="mdi mdi-directions"></i>
-                        <span class="hide-menu">{{ __('login.logout') }}</span>
+                        <span class="hide-menu">{{ translate('logout') }}</span>
                     </a>
                 </li>
             </ul>
