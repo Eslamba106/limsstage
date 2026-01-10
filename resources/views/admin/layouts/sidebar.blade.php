@@ -12,23 +12,12 @@
                         <span class="hide-menu">{{ translate('dashboard') }}</span>
                     </a>
                 </li>
+                
                 <li class="sidebar-item">
-                    <a class="sidebar-link has-arrow waves-effect waves-dark" href="javascript:void(0)"
-                        aria-expanded="false">
+                    <a href="{{ route('admin.tenant_management') }}" class="sidebar-link">
                         <i class="fa fa-users"></i>
-
-                        <span class="hide-menu">{{ translate('tenant_management') }} </span>
+                        <span class="hide-menu">{{ translate('tenant_management') }}</span>
                     </a>
-
-                    <ul aria-expanded="false" class="collapse  first-level">
-                        <li class="sidebar-item">
-                            <a href="{{ route('admin.tenant_management') }}" class="sidebar-link">
-                                <i class="mdi mdi-email"></i>
-                                <span class="hide-menu">{{ translate('all_tenants') }}</span>
-                            </a>
-                        </li>
-
-                    </ul>
                 </li>
                 <li class="sidebar-item">
                     <a href="{{ route('admin.schema') }}" class="sidebar-link">
