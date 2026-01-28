@@ -22,16 +22,16 @@ use App\Http\Controllers\LandingPageSettingsController;
 |
 */
 
- Route::get('admin-login-page', function () {
-        return view('auth.login-page');
-    })->name('admin.login-page');
+Route::get('admin-login-page', function () {
+    return view('auth.login-page');
+})->name('admin.login-page');
 Route::group(["prefix" => "auth/admin"], function () {
     Route::post("login", [AuthController::class, "admin_login"])->name("admin.login")->withoutMiddleware('auth');
     Route::get("logout", [AuthController::class, "admin_logout"])->name("admin.logout")->middleware('auth:admins');
 });
- Route::get('admin-login-page', function () {
-        return view('auth.login-page');
-    })->name('admin.login-page');
+Route::get('admin-login-page', function () {
+    return view('auth.login-page');
+})->name('admin.login-page');
 Route::group(["prefix" => "admin"], function () {
 
     Route::get("dashboard", [DashboardController::class, "index"])->name("admin.dashboard")->middleware('auth:admins');
@@ -80,7 +80,7 @@ Route::group(["prefix" => "admin"], function () {
         Route::patch("contact/update", [LandingPageSettingsController::class, "contact_update"])->name("admin.landing_page_settings.contact.update")->middleware('auth:admins');
     });
     Route::group(["prefix" => "conversation-requests"], function () {
-        Route::get("/", [ConversationRequestController::class, "list"])->name("admin.conversation_requests")->middleware('auth:admins'); 
-        Route::get("/delete/{id}", [ConversationRequestController::class, "delete"])->name("admin.conversation_requests.delete")->middleware('auth:admins'); 
+        Route::get("/", [ConversationRequestController::class, "list"])->name("admin.conversation_requests")->middleware('auth:admins');
+        Route::get("/delete/{id}", [ConversationRequestController::class, "delete"])->name("admin.conversation_requests.delete")->middleware('auth:admins');
     });
 });

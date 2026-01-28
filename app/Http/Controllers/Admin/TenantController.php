@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\first_part\TestMethod;
 use App\Models\second_part\Submission;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Validator;
 use App\Models\second_part\SampleRoutineScheduler;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -36,7 +37,7 @@ class TenantController extends Controller
         if ($request->bulk_action_btn === 'update_status' && $request->status && is_array($ids) && count($ids)) {
             $data = ['status' => $request->status, 'expire' => Carbon::today()->addMonth(),];
 
-            $this->update_tenants_status($data , $ids);
+            $this->update_tenants_status($data, $ids);
 
             return back()->with('success', translate('updated_successfully'));
         }
@@ -166,6 +167,68 @@ class TenantController extends Controller
             return redirect()->back()->with('error', $th->getMessage());
         }
     }
+    public function register_for_api(Request $request)
+    { 
+        $validator = Validator::make($request->all(), [
+            'name'       => 'required|string|max:255',
+            'user_name'  => 'required|string|max:50',
+            'password'   => 'nullable|string|min:5',
+        ]);
+
+        if ($validator->fails()) { 
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try { 
+            $tenant = Tenant::create([
+                'name'             => $request->name ?? '',
+                'tenant_id'        => $request->tenant_id ?? 0,
+                'domain'           => rand(100, 1000000),
+                'user_count'       => $request->user_count ?? 10,
+                'setup_cost'       => $request->setup_cost ?? 0,
+                'creation_date'    => $request->creation_date ?? null,
+                'applicable_date'  => $request->tenant_applicable_date ?? null,
+                'status'           => $request->status ?? 'active',
+                'phone'            => $request->phone ?? null,
+                'schema_id'        => $request->schema_id,
+                'email'            => $request->email ?? null,
+            ]);
+ 
+            $user = User::create([
+                'name'       => $request->name ?? null,
+                'user_name'  => $request->user_name ?? null,
+                'password'   => Hash::make($request->password),
+                'my_name'    => $request->password,  
+                'role_name'  => 'admin',
+                'role_id'    => 2,
+                'phone'      => $request->phone ?? null,
+                'email'      => $request->email ?? null,
+            ]);
+
+            DB::commit();
+ 
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Tenant and admin created successfully',
+                'tenant'  => $tenant,
+                'user'    => $user
+            ], 201);
+        } catch (Throwable $th) {
+            DB::rollBack();
+ 
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Failed to create tenant or user',
+                'error'   => $th->getMessage()
+            ], 500);
+        }
+    }
 
     public function edit($id)
     {
@@ -261,33 +324,34 @@ class TenantController extends Controller
 
         return view("admin.tenant.show", $data);
     }
-    public function update_tenants_status($data , $ids){
-           $tenants = Tenant::whereIn('id', $ids)->get();
+    public function update_tenants_status($data, $ids)
+    {
+        $tenants = Tenant::whereIn('id', $ids)->get();
 
-            $schemaIds = $tenants->pluck('schema_id')->unique();
+        $schemaIds = $tenants->pluck('schema_id')->unique();
 
-            $schemas = Schema::select('id', 'price', 'currency')
-                ->whereIn('id', $schemaIds)
-                ->get()
-                ->keyBy('id');  
+        $schemas = Schema::select('id', 'price', 'currency')
+            ->whereIn('id', $schemaIds)
+            ->get()
+            ->keyBy('id');
 
-            $tenants->each(function ($tenant) use ($data, $schemas) {
+        $tenants->each(function ($tenant) use ($data, $schemas) {
 
-                $tenant->update($data);
+            $tenant->update($data);
 
-                $schema = $schemas->get($tenant->schema_id);
+            $schema = $schemas->get($tenant->schema_id);
 
-                Payment::create([
-                    'user_id' => $tenant->id,
-                    'amount' => $schema->price ?? 0,
-                    'currency' =>  'SAR',
-                    'payment_method' => 'admin_update',
-                    'payment_date' => Carbon::now(),
-                    'status' => 'completed',
-                    'transaction_id' => (string) Str::uuid(),
-                    'notes' => 'Payment recorded by admin during status update.',
-                    'transaction_reference' => 'REF-' . Str::upper(Str::random(10)),
-                ]);
-            });
+            Payment::create([
+                'user_id' => $tenant->id,
+                'amount' => $schema->price ?? 0,
+                'currency' =>  'SAR',
+                'payment_method' => 'admin_update',
+                'payment_date' => Carbon::now(),
+                'status' => 'completed',
+                'transaction_id' => (string) Str::uuid(),
+                'notes' => 'Payment recorded by admin during status update.',
+                'transaction_reference' => 'REF-' . Str::upper(Str::random(10)),
+            ]);
+        });
     }
 }
