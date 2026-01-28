@@ -189,8 +189,8 @@ class TenantController extends Controller
             $tenant_id = rand(100, 1000000);
             $tenant = Tenant::create([
                 'name'             => $request->name ?? '', 
-                'tenant_id'        => $tenant_id ?? 0,
-                'domain'           => $request->tenant_id . '.' . $request->getHost(),
+                'tenant_id'        => $tenant_id  ,
+                'domain'           => $tenant_id . '.' . $request->getHost(),
                 'user_count'       => $request->user_count ?? 10,
                 'setup_cost'       => $request->setup_cost ?? 0,
                 'creation_date'    => $request->creation_date ?? null,
