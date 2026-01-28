@@ -126,15 +126,14 @@ class PaymentsController extends Controller
             $tenant->expire = now()->addMonth();
             $tenant->save();
 
-            event(new CompanyCreated($tenant));
-
-            // Capture الدفع
+            // event(new CompanyCreated($tenant));
+ 
             $capture = Http::baseUrl('https://api.moyasar.com/v1')
                 ->withBasicAuth(config('services.moyasar.secret'), '')
                 ->post("payments/{$payment_id}/capture")
                 ->json();
 
-            return redirect()->away("http://{$tenant->tenant_id}.limsstage.com")
+            return redirect()->away("https://{$tenant->tenant_id}.limsstage.com")
                 ->with("success", __('general.added_successfully'));
         }
 
