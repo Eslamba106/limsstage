@@ -168,14 +168,14 @@ class TenantController extends Controller
         }
     }
     public function register_for_api(Request $request)
-    { 
+    {
         $validator = Validator::make($request->all(), [
             'name'       => 'required|string|max:255',
             'user_name'  => 'required|string|max:50',
             'password'   => 'nullable|string|min:5',
         ]);
 
-        if ($validator->fails()) { 
+        if ($validator->fails()) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Validation failed',
@@ -185,11 +185,14 @@ class TenantController extends Controller
 
         DB::beginTransaction();
 
-        try { 
+        try {
+            $tenant_id = rand(100, 1000000);
             $tenant = Tenant::create([
                 'name'             => $request->name ?? '',
-                'tenant_id'        => $request->tenant_id ?? 0,
-                'domain'           => rand(100, 1000000),
+                // 'tenant_id'        => $request->tenant_id ?? 0,
+                // 'domain'           => rand(100, 1000000),
+                'tenant_id'        => $tenant_id ?? 0,
+                'domain'           => $request->tenant_id . '.' . $request->getHost(),
                 'user_count'       => $request->user_count ?? 10,
                 'setup_cost'       => $request->setup_cost ?? 0,
                 'creation_date'    => $request->creation_date ?? null,
@@ -199,12 +202,12 @@ class TenantController extends Controller
                 'schema_id'        => $request->schema_id,
                 'email'            => $request->email ?? null,
             ]);
- 
+
             $user = User::create([
                 'name'       => $request->name ?? null,
                 'user_name'  => $request->user_name ?? null,
                 'password'   => Hash::make($request->password),
-                'my_name'    => $request->password,  
+                'my_name'    => $request->password,
                 'role_name'  => 'admin',
                 'role_id'    => 2,
                 'phone'      => $request->phone ?? null,
@@ -212,7 +215,7 @@ class TenantController extends Controller
             ]);
 
             DB::commit();
- 
+
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Tenant and admin created successfully',
@@ -221,7 +224,7 @@ class TenantController extends Controller
             ], 201);
         } catch (Throwable $th) {
             DB::rollBack();
- 
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Failed to create tenant or user',
