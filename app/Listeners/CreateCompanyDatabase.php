@@ -9,13 +9,12 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Log;
-
-class CreateCompanyDatabase
+class CreateCompanyDatabase implements ShouldQueue
 {
     /**
      * Create the event listener.
      */
+        use InteractsWithQueue;
     public function __construct()
     {
         //
@@ -33,32 +32,32 @@ class CreateCompanyDatabase
 
         Config::set('database.connections.tenant.database', $db);
         // Log::info('Tenant database created: ' . $db);
-//        $dir = new DirectoryIterator(database_path('migrations/tenants'));
-  //      foreach ($dir as $file) {
-    //        if ($file->isFile()) {
-      //          Artisan::call('migrate', [
+        //        $dir = new DirectoryIterator(database_path('migrations/tenants'));
+        //      foreach ($dir as $file) {
+        //        if ($file->isFile()) {
+        //          Artisan::call('migrate', [
         //            '--database'        => 'tenant',
-          //          '--path'  =>  'database/migrations/tenants/' . $file->getFilename(),
-            //        '--force'   => true,
-              //  ]);
-   //         };
-     //   }
+        //          '--path'  =>  'database/migrations/tenants/' . $file->getFilename(),
+        //        '--force'   => true,
+        //  ]);
+        //         };
+        //   }
 
-       // $this->copyDataToTenantDB($db, $tenant);
+        // $this->copyDataToTenantDB($db, $tenant);
 
-	$files = collect(scandir(database_path('migrations/tenants')))
-    ->filter(fn($f) => str_ends_with($f, '.php'))
-    ->sort()
-    ->values();
+        $files = collect(scandir(database_path('migrations/tenants')))
+            ->filter(fn($f) => str_ends_with($f, '.php'))
+            ->sort()
+            ->values();
 
-foreach ($files as $file) {
-    Artisan::call('migrate', [
-        '--database' => 'tenant',
-        '--path' => 'database/migrations/tenants/' . $file,
-        '--force' => true,
-    ]);
-}
-$this->copyDataToTenantDB($db, $tenant);
+        foreach ($files as $file) {
+            Artisan::call('migrate', [
+                '--database' => 'tenant',
+                '--path' => 'database/migrations/tenants/' . $file,
+                '--force' => true,
+            ]);
+        }
+        $this->copyDataToTenantDB($db, $tenant);
     }
 
 
@@ -67,7 +66,7 @@ $this->copyDataToTenantDB($db, $tenant);
         DB::purge('tenant');
         Config::set('database.connections.tenant.database', $db);
         DB::reconnect('tenant');
-        $tablesToCopy = ['roles', 'sections', 'permissions','business_settings'];
+        $tablesToCopy = ['roles', 'sections', 'permissions', 'business_settings'];
         foreach ($tablesToCopy as $table) {
             $data = DB::table($table)->get();
             if ($data->isNotEmpty()) {
@@ -84,17 +83,16 @@ $this->copyDataToTenantDB($db, $tenant);
 
         $latestCompany = DB::table('tenants')->orderBy('id', 'desc')->first();
         if ($latestCompany) {
-              $companyArray = (array) $latestCompany;
- 
-    $columnsToIgnore = ['expire'];  
-    foreach ($columnsToIgnore as $col) {
-        unset($companyArray[$col]);
-    }
+            $companyArray = (array) $latestCompany;
 
-    DB::connection("tenant")->table('tenants')->insert($companyArray);
-            
+            $columnsToIgnore = ['expire'];
+            foreach ($columnsToIgnore as $col) {
+                unset($companyArray[$col]);
+            }
+
+            DB::connection("tenant")->table('tenants')->insert($companyArray);
+
             // DB::connection("tenant")->table('tenants')->insert((array) $latestCompany);
         }
-    
     }
 }
