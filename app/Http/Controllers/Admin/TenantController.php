@@ -190,7 +190,7 @@ class TenantController extends Controller
             $tenant = Tenant::create([
                 'name'             => $request->name ?? '',
                 'tenant_id'        => $tenant_id,
-                'domain'           => $tenant_id . '.' . $request->getHost(),
+                'domain'           => $tenant_id . '.limsstage.com' ,
                 'user_count'       => $request->user_count ?? 10,
                 'setup_cost'       => $request->setup_cost ?? 0,
                 'creation_date'    => $request->creation_date ?? null,
