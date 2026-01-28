@@ -29,7 +29,7 @@
         <div class="row justify-content-center align-items-center">
             <div class="col-12">
                 <img style="" src="{{asset("public/assets/back-end/img/404-logo.svg")}}" alt="">
-                <h2 class="page-not-found">{{translate('page_Not_found')}}</h2>
+                <h2 class="page-not-found">{{translate('page_Not_found_Please_Wait_few_minutes')}}</h2>
 
                 <p style="text-align: center;">{{translate('we_are_sorry')}}, {{translate('the_page_you_requested_could_not_be_found')}} <br>
                     {{translate('please_go_back_to_the_homepage')}}</p>
