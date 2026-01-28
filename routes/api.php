@@ -15,3 +15,12 @@ Route::group(["prefix" => "plans"], function () {
 });
 
 Route::post("admin/tenant-management/register_tenant", [TenantController::class, "register_for_api"])->name("api.admin.tenant_management.register_tenant");
+
+
+Route::get('/get-schema-price/{id}', function($id){
+    $schema = \App\Models\Schema::find($id);
+    if($schema){
+        return response()->json(['status'=>'success','price'=>$schema->price]);
+    }
+    return response()->json(['status'=>'error','price'=>0]);
+});

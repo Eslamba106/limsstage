@@ -188,9 +188,7 @@ class TenantController extends Controller
         try {
             $tenant_id = rand(100, 1000000);
             $tenant = Tenant::create([
-                'name'             => $request->name ?? '',
-                // 'tenant_id'        => $request->tenant_id ?? 0,
-                // 'domain'           => rand(100, 1000000),
+                'name'             => $request->name ?? '', 
                 'tenant_id'        => $tenant_id ?? 0,
                 'domain'           => $request->tenant_id . '.' . $request->getHost(),
                 'user_count'       => $request->user_count ?? 10,
@@ -215,13 +213,15 @@ class TenantController extends Controller
             ]);
 
             DB::commit();
+            $paymentUrl = "https://limsstage.com/tenant-payment?schema_id={$request->schema_id}&tenant_id={$tenant->id}";
 
             return response()->json([
-                'status'  => 'success',
-                'message' => 'Tenant and admin created successfully',
-                'tenant'  => $tenant,
-                'user'    => $user
-            ], 201);
+                'status'      => 'success',
+                'message'     => 'Tenant and admin created successfully',
+                'tenant'      => $tenant,
+                'user'        => $user,
+                'payment_url' => $paymentUrl
+            ], 201); 
         } catch (Throwable $th) {
             DB::rollBack();
 

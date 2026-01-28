@@ -334,9 +334,9 @@
 
     Route::post('send-conversation-request', [ConversationRequestController::class, 'store'])->name('send.conversation.request');
 
-    Route::get('/schema/{schema}/payment/callback', [PaymentsController::class, 'callback'])->name('payment.callback');
     Route::get('/schema/{id}/{tenant_id}', function () {
         $schema = Schema::findOrFail(request()->id);
         $tenant = Tenant::findOrFail(request()->tenant_id);
         return view('admin.tenant.payment', compact('schema', 'tenant'));
     })->name('payment.page');
+    Route::get('/schema/{schema}/payment/callback', [PaymentsController::class, 'callback'])->name('payment.callback');
