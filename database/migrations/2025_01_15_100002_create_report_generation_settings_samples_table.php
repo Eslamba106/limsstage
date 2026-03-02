@@ -27,7 +27,7 @@ return new class extends Migration
                   ->on('samples')
                   ->onDelete('cascade');
             
-            $table->unique(['report_setting_id', 'sample_id']);
+                $table->unique(['report_setting_id', 'sample_id'], 'rgs_samples_unique');
         });
     }
 
