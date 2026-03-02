@@ -14,7 +14,7 @@ class Certificate extends Model
     use Prunable;
    public function prunable()
     {
-        $days = Tenant::first()->tenant_delete_days ?? 30;
+        $days = Tenant::first()?->tenant_delete_days ?? 30;
 
         return static::where('created_at', '<=', now()->subDays($days));
     }     protected $guarded = [];
@@ -34,5 +34,10 @@ class Certificate extends Model
     public function authorized_By()
     {
         return $this->belongsTo(User::class, 'authorized_id');
+    }
+    
+    public function client()
+    {
+        return $this->belongsTo(Client::class, 'client_id');
     }
 }

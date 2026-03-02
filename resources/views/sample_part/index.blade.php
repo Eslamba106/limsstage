@@ -49,7 +49,7 @@
                             <div class="form-group">
                                 <label for="">{{ __('samples.main_plant_name') }} <span
                                         class="text-danger">*</span></label>
-                                <select name="plant_id" class="form-control"  >
+                                <select name="plant_id" class="form-control">
                                     <option value="">{{ __('samples.select_plant') }}</option>
                                     @foreach ($plant_master as $plant_item)
                                         <option value="{{ $plant_item->id }}">{{ $plant_item->name }}</option>
@@ -72,18 +72,18 @@
     <form action="" method="get">
 
         <div class="col-12">
-     
+
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th><input class="bulk_check_all" type="checkbox" /></th>
                             <th class="text-center" scope="col">{{ __('roles.name') }}</th>
-                            <th class="text-center" scope="col">{{ __('samples.main_plant_name') }}</th> 
+                            <th class="text-center" scope="col">{{ __('samples.main_plant_name') }}</th>
                             <th class="text-center" scope="col">{{ __('roles.Actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody> 
+                    <tbody>
                         @forelse ($main as $main_item)
                             <tr>
                                 <th scope="row">
@@ -95,17 +95,17 @@
                                 </th>
 
                                 <td class="text-center">{{ $main_item->name }}</td>
-                                @if ($main_item->plant_id != null) 
-                                    <td class="text-center">{{ $main_item->mainPlant->name }}</td>
+                                @if ($main_item->plant_id != null)
+                                    <td class="text-center">{{ $main_item->mainPlant?->name ?? 'N/A' }}</td>
                                 @else
                                     <td class="text-center">Master</td>
-                                    
-                                @endif 
+                                @endif
                                 <td class="text-center">
                                     @can('delete_' . $route . '')
                                         <a href="{{ route('admin.' . $route . '.delete', $main_item->id) }}"
-                                            class="btn btn-danger btn-sm" title="@lang('dashboard.delete')"><i
-                                                class="fa fa-trash"></i></a>
+                                            class="btn btn-danger btn-sm delete-plant" data-plant-name="{{ $main_item->name }}"
+                                            data-is-master="{{ $main_item->plant_id === null ? 'true' : 'false' }}"
+                                            title="@lang('dashboard.delete')"><i class="fa fa-trash"></i></a>
                                     @endcan
                                     @can('edit_' . $route . '')
                                         <a href="{{ route('admin.' . $route . '.edit', $main_item->id) }}"
@@ -128,4 +128,43 @@
         </div>
         </div>
     </form>
+@endsection
+
+@section('js')
+    <script>
+        $(document).ready(function() {
+            $(document).on('click', '.delete-plant', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var deleteUrl = $(this).attr('href');
+                var plantName = $(this).data('plant-name');
+                var isMaster = $(this).data('is-master') === 'true' || $(this).data('is-master') === true;
+
+                var title = '{{ __('general.are_you_sure_delete_this') }}';
+
+                var text = isMaster ?
+                    '{{ __('general.delete_master_plant_warning') }}: "' + plantName +
+                    '". {{ __('general.all_sub_plants_will_be_deleted') }}' :
+                    '{{ __('general.delete_plant_warning') }}: "' + plantName +
+                    '". {{ __('general.you_will_not_be_able_to_revert_this') }}';
+
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: '{{ __('general.yes_delete_it') }}',
+                    cancelButtonText: '{{ __('general.cancel') }}',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.value) {
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

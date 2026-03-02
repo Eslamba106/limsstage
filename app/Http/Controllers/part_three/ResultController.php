@@ -18,9 +18,12 @@ use App\Models\second_part\Submission;
 use App\Models\part_three\ResultTestMethod;
 use App\Models\part_three\ResultTestMethodItem;
 use App\Models\second_part\SampleRoutineScheduler;
+use App\Models\SampleTestMethod;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ResultController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request)
     {
         $ids         = $request->bulk_ids;
@@ -122,11 +125,13 @@ class ResultController extends Controller
     }
     public function edit($id)
     {
+        $this->authorize('edit_result');
+        
         $units  = Unit::select('id', 'name')->get();
         $sample = Submission::with('plant', 'master_sample', 'sub_plant', 'sample_main', 'sample', 'submission_test_method_items', 'result')->findOrFail($id);
 
-        $recent_results = Result::where('sample_id', $sample->master_sample?->id)->latest()->limit(3)->get();
-        return view('part_three.results.edit', compact('sample'));
+        $recent_results = Result::where('sample_id', $sample->master_sample?->id)->latest()->limit(5)->get();
+        return view('part_three.results.edit', compact('sample', 'units', 'recent_results'));
     }
     public function review($id)
     {
@@ -136,6 +141,8 @@ class ResultController extends Controller
     }
     public function destroy($id)
     {
+        $this->authorize('delete_result');
+        
         $result = Result::findOrFail($id);
         $result->delete();
         return redirect()->route('admin.result')->with('success', __('general.deleted_successfully'));
@@ -146,21 +153,49 @@ class ResultController extends Controller
         if ($type == 'submission') {
             $sample = Submission::with('plant', 'master_sample', 'sub_plant', 'sample_main', 'sample', 'submission_test_method_items')->findOrFail($id);
         } elseif ($type == 'schedule') {
-            $sample = SampleRoutineScheduler::with('sample', 'plant', 'sub_plant', 'sample_routine_scheduler_items')->findOrFail($id);
+            $sample = SampleRoutineScheduler::with([
+                'sample', 
+                'plant', 
+                'sub_plant', 
+                'sample_routine_scheduler_items.test_method'
+            ])->findOrFail($id);
         }
-        $recent_results = Result::where('sample_id', $sample->master_sample?->id)->latest()->limit(3)->get();
-        return view('part_three.results.create', compact('sample', 'units', 'recent_results'));
+        $recent_results = Result::where('sample_id', $sample->master_sample?->id ?? $sample->sample?->id)->latest()->limit(5)->get();
+        return view('part_three.results.create', compact('sample', 'units', 'recent_results', 'type'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create_result');
+        
         $request->validate([
             'test_method_items' => 'required|array',
             'sample_id'         => 'required',
             'submission_id'     => 'required',
         ]);
-        $sample     = Sample::where('id', $request->sample_id)->first();
-        $submission = Submission::where('id', $request->submission_id)->first();
+        
+        $type = $request->input('type', 'submission');
+        $sample = Sample::where('id', $request->sample_id)->first();
+        
+        if (!$sample) {
+            return back()->withErrors(['sample_id' => __('general.sample_not_found')])
+                ->withInput();
+        }
+        
+        if ($type == 'schedule') {
+            $submission = SampleRoutineScheduler::where('id', $request->submission_id)->first();
+            if (!$submission) {
+                return back()->withErrors(['submission_id' => __('general.schedule_not_found')])
+                    ->withInput();
+            }
+        } else {
+            $submission = Submission::where('id', $request->submission_id)->first();
+            if (!$submission) {
+                return back()->withErrors(['submission_id' => __('general.submission_not_found')])
+                    ->withInput();
+            }
+        }
+        
         DB::beginTransaction();
         try {
             $result = Result::where('submission_id', $request->submission_id)->first();
@@ -169,19 +204,26 @@ class ResultController extends Controller
                     'sample_id'              => $request->sample_id,
                     'submission_id'          => $request->submission_id,
                     'plant_id'               => $sample->plant_id,
-                    'sub_plant_id'           => ($sample->sub_plant_id) ? $sample->sub_plant_id : null,
+                    'sub_plant_id'           => $sample->sub_plant_id ?? null,
                     'plant_sample_id'        => $sample->plant_sample_id,
-                    'priority'               => $submission->priority,
-                    'sampling_date_and_time' => $submission->sampling_date_and_time ? $submission->sampling_date_and_time : null,
+                    'priority'               => $type == 'schedule' ? 'normal' : ($submission->priority ?? 'normal'),
+                    'sampling_date_and_time' => $type == 'schedule' ? ($submission->created_at ?? null) : ($submission->sampling_date_and_time ?? null),
                     'internal_comment'       => $request->internal_comment,
                     'external_comment'       => $request->external_comment,
                     'submission_number'      => $submission->submission_number,
                     'status'                 => 'pending',
-                    'user_id'                => auth()->id() ?? null,
+                    'user_id'                => auth()->id(),
                 ]);
             }
             foreach ($request->sample_test_method_id as $test_method_item) {
-                $main_test_method    = DB::table('sample_test_methods')->whereId($test_method_item)->first();
+                $main_test_method = \App\Models\SampleTestMethod::find($test_method_item);
+                
+                if (!$main_test_method) {
+                    DB::rollBack();
+                    return back()->withErrors(['sample_test_method_id' => __('general.test_method_not_found')])
+                        ->withInput();
+                }
+                
                 $result_test_methods = ResultTestMethod::firstOrCreate([
                     'test_method_id' => $main_test_method->test_method_id,
                     'result_id'      => $result->id,
@@ -201,29 +243,53 @@ class ResultController extends Controller
                 }
             }
 
-            $submissionMaster = Submission::find($request->submission_id);
-            $submissionMaster->update([
-                'status' => 'fourth_step',
-            ]);
-            $allHaveResults = $submissionMaster->submission_test_method_items->every(function ($item) {
-                return $item->result !== null;
-            });
-
-            if ($allHaveResults) {
+            // Update submission/schedule status
+            if ($type == 'schedule') {
+                $submissionMaster = SampleRoutineScheduler::find($request->submission_id);
+                $allHaveResults = $submissionMaster->sample_routine_scheduler_items->every(function ($item) {
+                    return $item->result !== null;
+                });
+                
+                if ($allHaveResults) {
+                    $submissionMaster->update([
+                        'status' => 'completed',
+                    ]);
+                } else {
+                    $submissionMaster->update([
+                        'status' => 'in_progress',
+                    ]);
+                }
+            } else {
+                $submissionMaster = Submission::find($request->submission_id);
                 $submissionMaster->update([
-                    'status' => 'fifth_step',
+                    'status' => 'fourth_step',
                 ]);
+                $allHaveResults = $submissionMaster->submission_test_method_items->every(function ($item) {
+                    return $item->result !== null;
+                });
+
+                if ($allHaveResults) {
+                    $submissionMaster->update([
+                        'status' => 'fifth_step',
+                    ]);
+                }
             }
             DB::commit();
             return redirect()->route('admin.result')->with('success', __('general.created_successfully'));
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with("error", $e->getMessage());
+            Log::error('Error storing result: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->except(['_token'])
+            ]);
+            return redirect()->back()->with("error", __('general.something_went_wrong'))->withInput();
         }
     }
 
     public function confirm_results($id)
     {
+        $this->authorize('edit_result');
+        
         $result = Result::with(
             'submission',
             'plant',
@@ -232,7 +298,8 @@ class ResultController extends Controller
             'sample',
             'result_test_method_items',
             'result_test_method_items.test_method',
-            'result_test_method_items.result_test_method_items'
+            'result_test_method_items.result_test_method_items',
+            'result_test_method_items.result_test_method_items.main_test_method_item.main_unit'
         )->findOrFail($id);
         $data = [
             'result' => $result,
@@ -242,6 +309,8 @@ class ResultController extends Controller
     }
     public function approve_confirm_results($id)
     {
+        $this->authorize('edit_result');
+        
         $result = Result::findOrFail($id);
         foreach ($result->result_test_method_items as $test_method) {
             foreach ($test_method->result_test_method_items as $result_item) {
@@ -281,6 +350,8 @@ class ResultController extends Controller
     }
     public function cancel_confirm_results($id)
     {
+        $this->authorize('edit_result');
+        
         $result = Result::findOrFail($id);
         foreach ($result->result_test_method_items as $test_method) {
             foreach ($test_method->result_test_method_items as $result_item) {
@@ -296,6 +367,8 @@ class ResultController extends Controller
     }
   public function approve_confirm_results_by_item($id)
 {
+    $this->authorize('edit_result');
+    
     $test_method = ResultTestMethod::findOrFail($id); 
     foreach ($test_method->result_test_method_items as $result_item) {
         $result_item->update([
@@ -381,6 +454,8 @@ class ResultController extends Controller
     // }
     public function cancel_confirm_results_by_item($id)
     {
+        $this->authorize('edit_result');
+        
         $test_method = ResultTestMethod::findOrFail($id);
         foreach ($test_method->result_test_method_items as $result_item) {
             $result_item->update([

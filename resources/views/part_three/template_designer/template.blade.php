@@ -70,6 +70,9 @@
                                 <i class="la la-refresh"></i> {{ translate('create') }}
                             </a>
                         @endcan
+                        <a href="{{ route('admin.assign_all_templates') }}" class="btn btn-info mt-3 mr-2">
+                            <i class="la la-link"></i> {{ translate('Assign_COA_and_Samples') }}
+                        </a>
                     </div>
                 </div>
             </div>

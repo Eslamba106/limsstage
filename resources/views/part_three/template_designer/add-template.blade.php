@@ -233,247 +233,220 @@
 
 
     <div class="container bg-white p-4 shadow rounded mb-5">
-        @if (check_coa_settings('header_information'))
+        <div data-section="header_information" style="display: none;">
             <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
                 <div>
-                    @if (check_coa_settings('company_logo'))
+                    <div data-child="company_logo" style="display: none;">
                         <img width="80px" src="{{ asset(main_path() . 'assets/images/logo.png') }}" alt="Logo"
                             class="mb-2">
-                    @endif
-                    @if (check_coa_settings('company_name'))
+                    </div>
+                    <div data-child="company_name" style="display: none;">
                         <h6 class="mb-0 fw-bold">Laboratory Excellence Corp.</h6>
-                    @endif
-                    @if (check_coa_settings('laboratory_accreditation'))
+                    </div>
+                    <div data-child="laboratory_accreditation" style="display: none;">
                         <small class="text-muted">ISO/IEC 17025:2017 Accredited Laboratory</small><br>
                         <small class="text-muted">Cert No. LAB-2025-001</small>
-                    @endif
+                    </div>
                 </div>
                 <div class="text-end">
-                    @if (check_coa_settings('lims_number'))
+                    <div data-child="lims_number" style="display: none;">
                         <h6 class="text-primary fw-bold">Certificate of Analysis</h6>
-                    @endif
-                    @if (check_coa_settings('coa_number'))
+                    </div>
+                    <div data-child="coa_number" style="display: none;">
                         <small>Report No: <b>COA-2025-001</b></small><br>
-                    @endif
-                    @if (check_coa_settings('report_date'))
+                    </div>
+                    <div data-child="report_date" style="display: none;">
                         <small>Date: <b>January 15, 2025</b></small>
-                    @endif
+                    </div>
                 </div>
             </div>
-        @endif
+        </div>
 
-        @if (check_coa_settings('sample_information'))
+        <div data-section="sample_information" style="display: none;">
             <!-- Sample Info -->
             <h6 class="fw-bold mb-2">Sample Information</h6>
             <div class="row mb-4">
                 <div class="col-md-6">
-                    @if (check_coa_settings('batch_lot_number'))
+                    <div data-child="batch_lot_number" style="display: none;">
                         <p class="mb-1"><b>Sample ID:</b> SP-2025-001</p>
-                    @endif
-                    @if (check_coa_settings('sample_description'))
+                    </div>
+                    <div data-child="sample_description" style="display: none;">
                         <p class="mb-1"><b>Sample Type:</b> Process Water</p>
-                    @endif
-                    @if (check_coa_settings('sample_point'))
+                    </div>
+                    <div data-child="sample_point" style="display: none;">
                         <p class="mb-1"><b>Sample Point:</b> Plant A - Inlet Water</p>
-                    @endif
+                    </div>
+                    <div data-child="sample_plant" style="display: none;">
+                        <p class="mb-1"><b>Sample Plant:</b> Plant A</p>
+                    </div>
+                    <div data-child="sample_subplant" style="display: none;">
+                        <p class="mb-1"><b>Sample Subplant:</b> Subplant 1</p>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    @if (check_coa_settings('date_authorized'))
+                    <div data-child="date_authorized" style="display: none;">
                         <p class="mb-1"><b>Sampling Date:</b> Jan 15, 2025 09:30</p>
-                    @endif
-                    @if (check_coa_settings('date_received'))
+                    </div>
+                    <div data-child="date_received" style="display: none;">
                         <p class="mb-1"><b>Received Date:</b> Jan 15, 2025 10:00</p>
-                    @endif
-                    @if (check_coa_settings('date_analyzed'))
+                    </div>
+                    <div data-child="date_analyzed" style="display: none;">
                         <p class="mb-1"><b>Analysis Date:</b> Jan 15, 2025 11:30</p>
-                    @endif
+                    </div>
                 </div>
             </div>
-        @endif
-        @if (check_coa_settings('test_results'))
+        </div>
+        <div data-section="test_results" style="display: none;">
             <!-- Test Results -->
             <h6 class="fw-bold mb-2">Test Results</h6>
             <table class="table table-bordered">
                 <thead class="table-light">
                     <tr>
-                        @if (check_coa_settings('component_name'))
-                            <th>Parameter</th>
-                        @endif
-                        @if (check_coa_settings('test_method'))
-                            <th>Method</th>
-                        @endif
-                        @if (check_coa_settings('results'))
-                            <th>Result</th>
-                        @endif
-                        @if (check_coa_settings('unit'))
-                            <th>Units</th>
-                        @endif
-                        @if (check_coa_settings('specification'))
-                            <th>Specification</th>
-                        @endif
-                        @if (check_coa_settings('pass_fail_status'))
-                            <th>Status</th>
-                        @endif
+                        <th data-child="component_name" style="display: none;">Parameter</th>
+                        <th data-child="test_method" style="display: none;">Method</th>
+                        <th data-child="results" style="display: none;">Result</th>
+                        <th data-child="unit" style="display: none;">Units</th>
+                        <th data-child="specification" style="display: none;">Specification</th>
+                        <th data-child="pass_fail_status" style="display: none;">Status</th>
+                        <th data-child="analyst" style="display: none;">Analyst</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        @if (check_coa_settings('component_name'))
-                            <td>pH</td>
-                        @endif
-                        @if (check_coa_settings('test_method'))
-                            <td>ASTM D1293</ td>
-                        @endif
-                        @if (check_coa_settings('results'))
-                            <td>7.5</td>
-                        @endif
-                        @if (check_coa_settings('unit'))
-                            <td>-</td>
-                        @endif
-                        @if (check_coa_settings('specification'))
-                            <td>6.5 - 8.5</td>
-                        @endif
-                        @if (check_coa_settings('pass_fail_status'))
-                            <td><span class="status-badge status-pass">Pass</span></td>
-                        @endif
+                        <td data-child="component_name" style="display: none;">pH</td>
+                        <td data-child="test_method" style="display: none;">ASTM D1293</td>
+                        <td data-child="results" style="display: none;">7.5</td>
+                        <td data-child="unit" style="display: none;">-</td>
+                        <td data-child="specification" style="display: none;">6.5 - 8.5</td>
+                        <td data-child="pass_fail_status" style="display: none;"><span class="status-badge status-pass">Pass</span></td>
+                        <td data-child="analyst" style="display: none;">Mike Johnson</td>
                     </tr>
                     <tr>
-                        @if (check_coa_settings('component_name'))
-                            <td>Conductivity</td>
-                        @endif
-                        @if (check_coa_settings('test_method'))
-                            <td>ASTM D1125</ td>
-                        @endif
-                        @if (check_coa_settings('results'))
-                            <td>452</td>
-                        @endif
-                        @if (check_coa_settings('unit'))
-                            <td>µS/cm</td>
-                        @endif
-                        @if (check_coa_settings('specification'))
-                            <td>&lt; 500</td>
-                        @endif
-                        @if (check_coa_settings('pass_fail_status'))
-                            <td><span class="status-badge status-warning">Warning</span></td>
-                        @endif
+                        <td data-child="component_name" style="display: none;">Conductivity</td>
+                        <td data-child="test_method" style="display: none;">ASTM D1125</td>
+                        <td data-child="results" style="display: none;">452</td>
+                        <td data-child="unit" style="display: none;">µS/cm</td>
+                        <td data-child="specification" style="display: none;">&lt; 500</td>
+                        <td data-child="pass_fail_status" style="display: none;"><span class="status-badge status-warning">Warning</span></td>
+                        <td data-child="analyst" style="display: none;">Mike Johnson</td>
                     </tr>
                     <tr>
-                        @if (check_coa_settings('component_name'))
-                            <td>Sodium (Na)</td>
-                        @endif
-                        @if (check_coa_settings('test_method'))
-                            <td>-</td>
-                        @endif
-                        @if (check_coa_settings('results'))
-                            <td>23.5</td>
-                        @endif
-                        @if (check_coa_settings('unit'))
-                            <td>mg/L</td>
-                        @endif
-                        @if (check_coa_settings('specification'))
-                            <td>&lt; 30.0</td>
-                        @endif
-                        @if (check_coa_settings('pass_fail_status'))
-                            <td><span class="status-badge status-pass">Pass</span></td>
-                        @endif
+                        <td data-child="component_name" style="display: none;">Sodium (Na)</td>
+                        <td data-child="test_method" style="display: none;">-</td>
+                        <td data-child="results" style="display: none;">23.5</td>
+                        <td data-child="unit" style="display: none;">mg/L</td>
+                        <td data-child="specification" style="display: none;">&lt; 30.0</td>
+                        <td data-child="pass_fail_status" style="display: none;"><span class="status-badge status-pass">Pass</span></td>
+                        <td data-child="analyst" style="display: none;">Mike Johnson</td>
                     </tr>
                     <tr>
-                        @if (check_coa_settings('component_name'))
-                            <td>Potassium (K)</td>
-                        @endif
-                        @if (check_coa_settings('test_method'))
-                            <td>EPA 200.7
-                        @endif
-                        </td>
-                        @if (check_coa_settings('results'))
-                            <td>4.2</td>
-                        @endif
-                        @if (check_coa_settings('unit'))
-                            <td>mg/L</td>
-                        @endif
-                        @if (check_coa_settings('specification'))
-                            <td>&lt; 5.0</td>
-                        @endif
-                        @if (check_coa_settings('pass_fail_status'))
-                            <td><span class="status-badge status-pass">Pass</span></td>
-                        @endif
+                        <td data-child="component_name" style="display: none;">Potassium (K)</td>
+                        <td data-child="test_method" style="display: none;">EPA 200.7</td>
+                        <td data-child="results" style="display: none;">4.2</td>
+                        <td data-child="unit" style="display: none;">mg/L</td>
+                        <td data-child="specification" style="display: none;">&lt; 5.0</td>
+                        <td data-child="pass_fail_status" style="display: none;"><span class="status-badge status-pass">Pass</span></td>
+                        <td data-child="analyst" style="display: none;">Mike Johnson</td>
                     </tr>
                     <tr>
-                        @if (check_coa_settings('component_name'))
-                            <td>Calcium (Ca)</td>
-                        @endif
-                        @if (check_coa_settings('test_method'))
-                            <td>-</td>
-                        @endif
-                        @if (check_coa_settings('results'))
-                            <td>40.1</td>
-                        @endif
-                        @if (check_coa_settings('unit'))
-                            <td>mg/L</td>
-                        @endif
-                        @if (check_coa_settings('specification'))
-                            <td>&lt; 40.0</td>
-                        @endif
-                        @if (check_coa_settings('pass_fail_status'))
-                            <td><span class="status-badge status-fail">Fail</span></td>
-                        @endif
+                        <td data-child="component_name" style="display: none;">Calcium (Ca)</td>
+                        <td data-child="test_method" style="display: none;">-</td>
+                        <td data-child="results" style="display: none;">40.1</td>
+                        <td data-child="unit" style="display: none;">mg/L</td>
+                        <td data-child="specification" style="display: none;">&lt; 40.0</td>
+                        <td data-child="pass_fail_status" style="display: none;"><span class="status-badge status-fail">Fail</span></td>
+                        <td data-child="analyst" style="display: none;">Mike Johnson</td>
                     </tr>
                 </tbody>
             </table>
-        @endif
+        </div>
 
-        @if (check_coa_settings('authorization'))
+        <div data-section="authorization" style="display: none;">
             <!-- Analysis Info -->
             <div class="row mt-4">
                 <div class="col-md-6">
-                    @if (check_coa_settings('authorization'))
-                        <h6 class="fw-bold mb-2">Analysis Information</h6>
-                    @endif
-                    @if (check_coa_settings('analyzed_by'))
+                    <h6 class="fw-bold mb-2">Analysis Information</h6>
+                    <div data-child="analyzed_by" style="display: none;">
                         <p class="mb-1"><b>Analyzed by:</b> Mike Johnson<br><small>Senior Analyst</small></p>
-                    @endif
-                    @if (check_coa_settings('authorized_by'))
+                    </div>
+                    <div data-child="authorized_by" style="display: none;">
                         <p class="mb-1"><b>Verified by:</b> John Doe<br><small>Lab Supervisor</small></p>
-                    @endif
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    @if (check_coa_settings('authorization'))
-                        <h6 class="fw-bold mb-2">Approval</h6>
-                    @endif
-                    @if (check_coa_settings('authorization'))
+                    <h6 class="fw-bold mb-2">Approval</h6>
+                    <div data-child="authorized_by" style="display: none;">
                         <p class="mb-1"><b>Approved by:</b> Dr. Robert Smith<br><small>Laboratory Director</small></p>
-                    @endif
-                    @if (check_coa_settings('authorization'))
                         <p class="mb-1"><small>Date: Jan 15, 2025</small></p>
-                    @endif
-                    @if (check_coa_settings('digital_signature'))
+                    </div>
+                    <div data-child="digital_signature" style="display: none;">
                          <img width="150px" height="150px" id="signature_img"
                                             src="{{ asset(main_path() . 'signature/' . auth()->user()?->signature) }}" alt="Signature">
-                    @endif
+                    </div>
+                    <div data-child="comments" style="display: none;">
+                        <p class="mb-1"><b>Comments:</b> All tests completed successfully.</p>
+                    </div>
                 </div>
             </div>
-        @endif
-        @if (check_coa_settings('footer_information')) 
+        </div>
+        <div data-section="footer_information" style="display: none;">
             <!-- Footer -->
             <div class="mt-4 text-muted small border-top pt-3">
-                @if (check_coa_settings('disclaimer_text'))
+                <div data-child="disclaimer_text" style="display: none;">
                     <p>This report relates only to the sample(s) tested and shall not be reproduced except in full, without
                         written
                         approval of the laboratory.</p>
-                @endif
-                @if (check_coa_settings('page_numbers'))
+                </div>
+                <div data-child="page_numbers" style="display: none;">
                     <p class="mb-0">End of Report - Page 1 of 1</p>
-                @endif
-                @if (check_coa_settings('laboratory_contact_information'))
+                </div>
+                <div data-child="laboratory_contact_information" style="display: none;">
                     <p class="mb-0">Laboratory Excellence Corp. | 123 Lab Street, Science City, ST 12345</p>
-                @endif
-                @if (check_coa_settings('footer_information'))
-                    <p class="mb-0">Document ID: RPT-2025-001-V1</p>
-                @endif
+                </div>
             </div>
-        @endif
+        </div>
     </div>
 @endsection
 @section('js')
     <script src="{{ asset(main_path() . 'js/roles.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle section parent checkboxes (main sections)
+            $('.section-parent').on('change', function() {
+                const sectionName = $(this).attr('name');
+                const isChecked = $(this).is(':checked');
+                
+                // Find all elements with data-section attribute matching this section
+                $(`[data-section="${sectionName}"]`).toggle(isChecked);
+                
+                // Also handle child checkboxes
+                const sectionCard = $(this).closest('.section-card');
+                const childCheckboxes = sectionCard.find('.section-child');
+                childCheckboxes.prop('checked', isChecked);
+                childCheckboxes.trigger('change');
+            });
+
+            // Handle section child checkboxes (sub-sections)
+            $('.section-child').on('change', function() {
+                const childName = $(this).attr('name');
+                const isChecked = $(this).is(':checked');
+                
+                // Find all elements with data-child attribute matching this child
+                $(`[data-child="${childName}"]`).toggle(isChecked);
+            });
+
+            // Initialize visibility on page load
+            $('.section-parent').each(function() {
+                const sectionName = $(this).attr('name');
+                const isChecked = $(this).is(':checked');
+                $(`[data-section="${sectionName}"]`).toggle(isChecked);
+            });
+
+            $('.section-child').each(function() {
+                const childName = $(this).attr('name');
+                const isChecked = $(this).is(':checked');
+                $(`[data-child="${childName}"]`).toggle(isChecked);
+            });
+        });
+    </script>
 @endsection

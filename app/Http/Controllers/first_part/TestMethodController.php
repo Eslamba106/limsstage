@@ -8,6 +8,7 @@ use App\Models\part\Unit;
 use Illuminate\Http\Request;
 use App\Models\part\ResultType;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\first_part\TestMethod;
 use App\Models\first_part\TestMethodItem;
@@ -35,10 +36,51 @@ class TestMethodController extends Controller
             return back()->with('success', translate('updated_successfully'));
         }
         if ($request->bulk_action_btn === 'delete' &&  is_array($ids) && count($ids)) {
-
-
-            TestMethod::whereIn('id', $ids)->delete();
-            return back()->with('success', translate('deleted_successfully'));
+            $this->authorize('delete_test_method');
+            
+            $deleted = 0;
+            $errors = [];
+            
+            foreach ($ids as $id) {
+                try {
+                    $test_method = TestMethod::find($id);
+                    
+                    if (!$test_method) {
+                        continue;
+                    }
+                    
+                    // Check if test method is being used
+                    if ($test_method->isInUse()) {
+                        $usage = $test_method->getUsageDetails();
+                        $errors[] = __('general.cannot_delete_test_method_in_use', [
+                            'name' => $test_method->name,
+                            'samples' => $usage['samples'],
+                            'schedulers' => $usage['schedulers'],
+                            'results' => $usage['results'],
+                            'total' => $usage['total']
+                        ]);
+                        continue;
+                    }
+                    
+                    $test_method->delete();
+                    $deleted++;
+                } catch (\Exception $e) {
+                    Log::error('Error deleting test method in bulk: ' . $e->getMessage(), [
+                        'test_method_id' => $id
+                    ]);
+                    $errors[] = __('general.error_deleting_test_method', ['id' => $id]);
+                }
+            }
+            
+            if ($deleted > 0) {
+                $message = __('general.deleted_successfully');
+                if (count($errors) > 0) {
+                    $message .= '. ' . __('general.some_items_could_not_be_deleted');
+                }
+                return back()->with('success', $message)->with('errors', $errors);
+            } else {
+                return back()->withErrors(['error' => implode(', ', $errors)]);
+            }
         }
 
         $test_methods = TestMethod::select('id', 'name', 'status', 'description')->with('test_method_items')->orderBy("created_at", "desc")->paginate(10);
@@ -182,17 +224,60 @@ class TestMethodController extends Controller
     public function delete_component($id)
     {
         $this->authorize('delete_test_method');
-        $test_method_item = TestMethodItem::find($id);
+        
+        try {
+            $test_method_item = TestMethodItem::find($id);
+            
+            if (!$test_method_item) {
+                return redirect()->back()->with('error', translate('item_not_found'));
+            }
 
-        if ($test_method_item->delete()) {
-            return redirect()->back()->with('success', translate('deleted_successfully'));
+            if ($test_method_item->delete()) {
+                return redirect()->back()->with('success', translate('deleted_successfully'));
+            }
+            
+            return redirect()->back()->with('error', translate('delete_failed'));
+        } catch (\Exception $e) {
+            Log::error('Error deleting test method component: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'component_id' => $id
+            ]);
+
+            return back()->withErrors(['error' => translate('something_went_wrong')]);
         }
     }
+    
     public function destroy($id)
     {
         $this->authorize('delete_test_method');
-        $test_method = TestMethod::findOrFail($id);
-        $test_method->delete();
-        return redirect()->route('admin.test_method')->with('success', translate('deleted_successfully'));
+        
+        try {
+            $test_method = TestMethod::findOrFail($id);
+            
+            // Check if test method is being used
+            if ($test_method->isInUse()) {
+                $usage = $test_method->getUsageDetails();
+                $message = __('general.cannot_delete_test_method_in_use', [
+                    'samples' => $usage['samples'],
+                    'schedulers' => $usage['schedulers'],
+                    'results' => $usage['results'],
+                    'total' => $usage['total']
+                ]);
+                
+                return back()->withErrors(['error' => $message])
+                    ->with('error', $message);
+            }
+            
+            $test_method->delete();
+            
+            return redirect()->route('admin.test_method')->with('success', translate('deleted_successfully'));
+        } catch (\Exception $e) {
+            Log::error('Error deleting test method: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'test_method_id' => $id
+            ]);
+
+            return back()->withErrors(['error' => translate('something_went_wrong')]);
+        }
     }
 }

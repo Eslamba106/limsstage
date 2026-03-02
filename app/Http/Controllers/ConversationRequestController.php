@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ConversationRequest;
+use Illuminate\Support\Facades\Log;
 
 class ConversationRequestController extends Controller
 {
@@ -33,16 +34,35 @@ class ConversationRequestController extends Controller
             'message' => 'required|string',
         ]);
 
-         ConversationRequest::create($request->all());
+        try {
+            ConversationRequest::create($request->all());
 
-        return redirect()->back()->with('success', translate('Your message has been sent successfully!'));
+            return redirect()->back()->with('success', translate('Your message has been sent successfully!'));
+        } catch (\Exception $e) {
+            Log::error('Error storing conversation request: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->except(['_token', 'password'])
+            ]);
+
+            return back()->withErrors(['error' => translate('something_went_wrong')])
+                ->withInput();
+        }
     }
 
     public function delete($id)
     {
-        $conversation_request = ConversationRequest::findOrFail($id);
-        $conversation_request->delete();
+        try {
+            $conversation_request = ConversationRequest::findOrFail($id);
+            $conversation_request->delete();
 
-        return redirect()->back()->with('success', translate('Conversation request deleted successfully!'));
+            return redirect()->back()->with('success', translate('Conversation request deleted successfully!'));
+        } catch (\Exception $e) {
+            Log::error('Error deleting conversation request: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'conversation_request_id' => $id
+            ]);
+
+            return back()->withErrors(['error' => translate('something_went_wrong')]);
+        }
     }
 }

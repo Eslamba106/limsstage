@@ -211,11 +211,63 @@
                         @if (check_coa_settings('unit'))
                             <td>{{ $result_test_method_item->main_test_method_item->unit_main?->name ?? '-' }}</td>
                         @endif
+                        @php
+                            // Convert result to float
+                            $resultValue = floatval($result_test_method_item->result);
+                            
+                            // Get limits
+                            $warningLimit = floatval(get_warning_limit($result_test_method_item->test_method_item_id) ?? 0);
+                            $actionLimit = floatval(get_action_limit($result_test_method_item->test_method_item_id) ?? 0);
+                            $warningType = get_warning_type($result_test_method_item->test_method_item_id);
+                            $actionType = get_action_type($result_test_method_item->test_method_item_id);
+                            
+                            // Calculate status
+                            $result_status = getStatus($resultValue, $result_test_method_item->test_method_item_id);
+                            
+                            // If value is outside the range (less than min or greater than max), it should be Fail
+                            if ($warningLimit > 0 && $actionLimit > 0) {
+                                $minLimit = min($warningLimit, $actionLimit);
+                                $maxLimit = max($warningLimit, $actionLimit);
+                                
+                                // If value is outside the range, it's Fail
+                                if ($resultValue < $minLimit || $resultValue > $maxLimit) {
+                                    $result_status = 'danger';
+                                }
+                            }
+                            
+                            // Convert status to Pass/Fail
+                            $display_status = match($result_status) {
+                                'danger' => 'Fail',
+                                'normal' => 'Pass',
+                                'warning' => 'Warning',
+                                default => $result_status
+                            };
+                            
+                            // Determine CSS class
+                            $status_class = match($result_status) {
+                                'danger' => 'status-fail',
+                                'normal' => 'status-pass',
+                                'warning' => 'status-warning',
+                                default => 'status-pass'
+                            };
+                            
+                            // Format specification
+                            $specification = '-';
+                            if ($warningLimit > 0 && $actionLimit > 0) {
+                                $minLimit = min($warningLimit, $actionLimit);
+                                $maxLimit = max($warningLimit, $actionLimit);
+                                $specification = $minLimit . ' - ' . $maxLimit;
+                            } elseif ($warningLimit > 0) {
+                                $specification = get_warning_limit_and_type($result_test_method_item->test_method_item_id);
+                            } elseif ($actionLimit > 0) {
+                                $specification = get_action_limit_and_type($result_test_method_item->test_method_item_id);
+                            }
+                        @endphp
                         @if (check_coa_settings('specification'))
-                            <td>6.5 - 8.5</td>
+                            <td>{{ $specification }}</td>
                         @endif
                         @if (check_coa_settings('pass_fail_status'))
-                            <td><span class="status-badge status-pass">Pass</span></td>
+                            <td><span class="status-badge {{ $status_class }}">{{ $display_status }}</span></td>
                         @endif
                     </tr>
                        

@@ -64,10 +64,12 @@
                         </button>
                          @endcan
                         @can('delete_user') 
-                        <button type="submit" name="bulk_action_btn" value="delete"
-                            class="btn btn-danger delete_confirm mt-3 mr-2"> <i class="la la-trash"></i>
-                            {{ __('dashboard.delete') }}</button>
-                            @endcan
+                        <button type="button" name="bulk_action_btn" value="delete"
+                            class="btn btn-danger delete-bulk-confirm mt-3 mr-2" id="bulk-delete-btn">
+                            <i class="la la-trash"></i>
+                            {{ __('dashboard.delete') }}
+                        </button>
+                        @endcan
                         @can('create_user')
                         <a href="{{ route('user_managment.create') }}" class="btn btn-secondary mt-3 mr-2">
                             <i class="la la-refresh"></i> {{ __('dashboard.create') }}
@@ -107,8 +109,11 @@
                                 <td class="text-center">
                                     @can('delete_user') 
                                         <a href="{{ route('user_managment.delete', $user->id) }}"
-                                            class="btn btn-danger btn-sm" title="@lang('dashboard.delete')"><i
-                                                class="fa fa-trash"></i></a>
+                                            class="btn btn-danger btn-sm delete-single-confirm" 
+                                            title="@lang('dashboard.delete')"
+                                            data-user-name="{{ $user->name }}">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
                                     @endcan
                                     @can('edit_user') 
                                         <a href="{{ route('user_managment.edit', $user->id) }}"
@@ -130,4 +135,76 @@
 
 
 
+@endsection
+
+@section('js')
+    <script>
+        // Sweet Alert for single delete
+        $(document).on('click', '.delete-single-confirm', function(e) {
+            e.preventDefault();
+
+            const deleteUrl = $(this).attr('href');
+            const userName = $(this).data('user-name') || '';
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + (userName ? ' (' + userName + ')' : ''),
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+
+        // Sweet Alert for bulk delete
+        $(document).on('click', '#bulk-delete-btn', function(e) {
+            e.preventDefault();
+
+            const checkedItems = $('input.check_bulk_item:checked').length;
+            const btn = $(this);
+
+            if (checkedItems === 0) {
+                Swal.fire({
+                    title: '{{ translate('no_selection') }}',
+                    text: '{{ translate('please_select_at_least_one_item') }}',
+                    icon: 'warning',
+                    confirmButtonText: '{{ translate('ok') }}'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + ' (' + checkedItems +
+                    ' {{ translate('items_selected') }})',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    // Create a temporary submit button and click it
+                    const form = btn.closest('form');
+                    const tempBtn = $('<button>').attr({
+                        type: 'submit',
+                        name: 'bulk_action_btn',
+                        value: 'delete',
+                        style: 'display: none;'
+                    });
+                    form.append(tempBtn);
+                    tempBtn.click();
+                }
+            });
+        });
+    </script>
 @endsection

@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ClientController extends Controller
 {
@@ -24,36 +26,73 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' =>'required',
-            'phone' =>'required',
-            'email' =>'required',
+            'name'  => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255|unique:clients,email',
         ]);
-        $client        = new Client();
-        $client->name  = $request->name;
-        $client->phone = $request->phone;
-        $client->email  = $request->email; 
-        $client->save();
-        return redirect()->route('client.list')->with('success', translate('client_added_successfully'));
-
+        
+        try {
+            $client = Client::create([
+                'name'  => $request->name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+            ]);
+            
+            return redirect()->route('client.list')->with('success', translate('client_added_successfully'));
+        } catch (\Exception $e) {
+            Log::error('Error creating client: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->except(['_token', 'password'])
+            ]);
+            
+            return back()->withErrors(['error' => translate('something_went_wrong')])
+                ->withInput();
+        }
     }
+    
     public function update(Request $request)
     {
-          $request->validate([
-            'name' =>'required',
-            'phone' =>'required',
-            'email' =>'required',
+        $request->validate([
+            'id'    => 'required|exists:clients,id',
+            'name'  => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255|unique:clients,email,' . $request->id,
         ]);
-        $client        = Client::findOrFail($request->id);
-        $client->name  = $request->name;
-        $client->phone = $request->phone;
-        $client->email  = $request->email; 
-        $client->save();
-        return redirect()->route('client.list')->with('success', translate('client_updated_successfully'));
+        
+        try {
+            $client = Client::findOrFail($request->id);
+            $client->update([
+                'name'  => $request->name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+            ]);
+            
+            return redirect()->route('client.list')->with('success', translate('client_updated_successfully'));
+        } catch (\Exception $e) {
+            Log::error('Error updating client: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'client_id' => $request->id,
+                'request' => $request->except(['_token', 'password'])
+            ]);
+            
+            return back()->withErrors(['error' => translate('something_went_wrong')])
+                ->withInput();
+        }
     }
-     public function  delete( $id)
+    public function delete($id)
     {
-        $client = Client::findOrFail($id);
-        $client->delete();
-        return redirect()->route('client.list')->with('success', translate('client_deleted_successfully'));
+        try {
+            $client = Client::findOrFail($id);
+            $client->delete();
+            
+            return redirect()->route('client.list')->with('success', translate('client_deleted_successfully'));
+        } catch (\Exception $e) {
+            Log::error('Error deleting client: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'client_id' => $id
+            ]);
+            
+            return back()->withErrors(['error' => translate('something_went_wrong')]);
+        }
     }
 }

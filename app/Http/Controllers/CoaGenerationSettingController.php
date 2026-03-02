@@ -40,6 +40,8 @@ class CoaGenerationSettingController extends Controller
 
     public function create()
     {
+        $this->authorize('coa_generation_settings');
+        
         $plants      = Plant::select('id', 'name')->get();
         $samples     = Sample::select('id', 'plant_sample_id')->with('sample_plant:id,name')->get();
         $frequencies = Frequency::select('id', 'name')->get();
@@ -51,17 +53,18 @@ class CoaGenerationSettingController extends Controller
             'frequencies' => $frequencies,
         ];
         return view("coa_generation_settings.create", $data);
-
     }
 
     public function store(Request $request)
     {
+        $this->authorize('coa_generation_settings');
+        
         $request->validate([
-            'name'                 => 'required',
-            'frequency_id'         => 'required',
-            'generation_condition' => 'required',
-            'emails'               => 'required',
-            'sample_points'        => 'required',
+            'name'                 => 'required|string|max:255',
+            'frequency_id'         => 'required|exists:frequencies,id',
+            'generation_condition' => 'required|string',
+            'emails'               => 'required|array',
+            'sample_points'        => 'required|array',
         ]);
 
         DB::beginTransaction();
@@ -88,6 +91,8 @@ class CoaGenerationSettingController extends Controller
     }
     public function edit($id)
     {
+        $this->authorize('coa_generation_settings');
+        
         $coa_generation_setting = CoaGenerationSetting::findOrFail($id);
         $plants                 = Plant::select('id', 'name')->get();
         $samples                = Sample::select('id', 'plant_sample_id')->with('sample_plant:id,name')->get();
@@ -101,15 +106,16 @@ class CoaGenerationSettingController extends Controller
             'coa_generation_setting' => $coa_generation_setting,
         ];
         return view("coa_generation_settings.edit", $data);
-
     }
 
     public function update(Request $request, $id)
     {
+        $this->authorize('coa_generation_settings');
+        
         $request->validate([
-            'name'                 => 'required',
-            'frequency_id'         => 'required',
-            'generation_condition' => 'required',
+            'name'                 => 'required|string|max:255',
+            'frequency_id'         => 'required|exists:frequencies,id',
+            'generation_condition' => 'required|string',
             'emails'               => 'required|array',
             'sample_points'        => 'required|array',
         ]);
@@ -150,6 +156,8 @@ class CoaGenerationSettingController extends Controller
 
     public function delete($id)
     {
+        $this->authorize('coa_generation_settings');
+        
         DB::beginTransaction();
         try {
             $coa_generation_setting = CoaGenerationSetting::findOrFail($id);
@@ -163,7 +171,11 @@ class CoaGenerationSettingController extends Controller
                 ->with('success', translate('Deleted_Successfully'));
         } catch (Exception $ex) {
             DB::rollBack();
-            return back()->with('errors', $ex->getMessage());
+            \Log::error('Error deleting COA generation setting: ' . $ex->getMessage(), [
+                'trace' => $ex->getTraceAsString(),
+                'id' => $id
+            ]);
+            return back()->with('errors', translate('something_went_wrong'));
         }
     }
 

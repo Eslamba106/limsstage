@@ -133,7 +133,7 @@
 
                         <div class="card-body bg-light">
                             <div class="row " id="sample-point-form">
-                                {{-- <div class="container bg-white p-4 rounded shadow   col-lg-12"> 
+                                {{-- <div class="container bg-white p-4 rounded shadow   col-lg-12">
                                     <div class="card mb-3">
                                         <div class="card-header d-flex justify-content-between align-items-center bg-light">
                                             <div>
@@ -201,83 +201,170 @@
 @section('js')
     <script src="{{ asset('js/select2.min.js') }}"></script>
     <script>
-        $(document).on('change', 'select[name=plant_id]', function() {
-            var select = $(this);
-            var methodsContainer = $('#sample-point-form');
+        /**
+         * Render a sample card with test methods.
+         * @param {Object} sample - Sample data object
+         * @param {number} sampleIndex - Index for unique IDs
+         * @param {string|null} subPlantName - Sub plant name if applicable
+         * @returns {string} HTML string for the sample card
+         */
+        function renderSampleCard(sample, sampleIndex, subPlantName) {
+            var id = 'sample_' + sampleIndex;
+            let testMethodsHtml = '';
 
-            if (select.val()) {
-                $.ajax({
-                    url: "{{ route('admin.submission.schedule.get_sample_by_plant_id', ':id') }}".replace(
-                        ':id', select.val()),
-                    type: "GET",
-                    dataType: "json",
-                    success: function(data) {
-                        methodsContainer.empty();
+            // Check if test_methods exists and is an array
+            if (sample.test_methods && Array.isArray(sample.test_methods) && sample.test_methods.length > 0) {
+                sample.test_methods.forEach((test_method_item, testIndex) => {
+                    // Safely access master_test_method
+                    var testMethodName = test_method_item?.master_test_method?.name || 'Unknown';
+                    var testMethodId = test_method_item?.master_test_method?.id || test_method_item
+                        ?.test_method_id || '';
 
-                        data.all_samples.forEach(function(sample, sampleIndex) {
-                            var id = 'test_method_' + sampleIndex;
-                            let testMethodsHtml = '';
-                            sample.test_methods.forEach((test_method_item, testIndex) => {
-                                testMethodsHtml += `
-                            <div class="row align-items-center mb-2">
-                                <div class="col-3 test-method">
-                                    <i class="bi bi-beaker icon-lab"></i> ${testIndex + 1}. ${test_method_item.master_test_method.name}
-                                </div> 
-                                
-                                <div class="col-3">   
-                                    <select name="frequency_id-${sample.id}-${test_method_item.master_test_method.id}" class="form-control" required>
-                                        @foreach ($frequencies as $frequency)
-                                            <option value="{{ $frequency->id }}">{{ $frequency->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-3">
-                                    <input class="form-control" name="schedule_hour-${sample.id}-${test_method_item.master_test_method.id}" type="time"  step="60">
-                                </div>
-                                <div class="col-3 d-flex align-items-center">
-                                    <div class="  me-2">
-                                        <input class="form-check-input" type="checkbox" value="${test_method_item.master_test_method.id}" name="test_method_id[${sample.id}][]">
-                                    </div>
-                                    <i class="bi bi-gear-fill"></i>
-                                </div>
+                    testMethodsHtml += `
+                        <div class="row align-items-center mb-2">
+                            <div class="col-3 test-method">
+                                <i class="bi bi-beaker icon-lab"></i> ${testIndex + 1}. ${testMethodName}
                             </div>
-                        `;
-                            });
-
-                            var methodHtml = `
-                        <div class="container bg-white p-4 rounded shadow col-lg-12"> 
-                            <div class="card mb-3">
-                                <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                                    <div>
-                                        <strong>${sample.sample_plant?.name}</strong><br>
-                                        <small class="text-muted">Location:  </small>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-primary">  Tests</span>
-                                        <div class="  m-0">
-                                            <input class="form-check-input" type="checkbox" name="sample_points[]"   value="${sample.id} " id="${id}">
-                                        </div>
-                                    </div>
+                            <div class="col-3">
+                                <select name="frequency_id-${sample.id}-${testMethodId}" class="form-control" required>
+                                    @foreach ($frequencies as $frequency)
+                                        <option value="{{ $frequency->id }}">{{ $frequency->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <input class="form-control" name="schedule_hour-${sample.id}-${testMethodId}" type="time" step="60">
+                            </div>
+                            <div class="col-3 d-flex align-items-center">
+                                <div class="me-2">
+                                    <input class="form-check-input test-method-checkbox" type="checkbox" value="${testMethodId}" name="test_method_id[${sample.id}][]" data-sample-id="${sample.id}">
                                 </div>
-                                <div class="card-body p-2">
-                                    <div class="row text-muted mb-2">
-                                        <div class="col-3">{{ __('test_method.test_method') }}</div>
-                                        <div class="col-3">Frequency</div>
-                                        <div class="col-3">Schedule</div>
-                                        <div class="col-3">Status</div>
-                                    </div>
-                                    ${testMethodsHtml}
-                                </div>
+                                <i class="bi bi-gear-fill"></i>
                             </div>
                         </div>
                     `;
+                });
+            } else {
+                testMethodsHtml = '<p class="text-warning">No test methods available for this sample</p>';
+            }
 
-                            methodsContainer.append(methodHtml);
-                        });
+            var samplePlantName = sample?.sample_plant?.name || 'Unknown';
+            var testCount = sample.test_methods ? sample.test_methods.length : 0;
+
+            return `
+                <div class="container bg-white p-4 rounded shadow col-lg-12 mb-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                            <div>
+                                <strong>${samplePlantName}</strong><br>
+                                <small class="text-muted">Location: ${subPlantName || 'Main Plant'}</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-primary">${testCount} Tests</span>
+                                <div class="m-0">
+                                    <input class="form-check-input sample-point-checkbox" type="checkbox" name="sample_points[]" value="${sample.id}" id="${id}" data-sample-id="${sample.id}" checked>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="row text-muted mb-2">
+                                <div class="col-3">{{ __('test_method.test_method') }}</div>
+                                <div class="col-3">Frequency</div>
+                                <div class="col-3">Schedule</div>
+                                <div class="col-3">Status</div>
+                            </div>
+                            ${testMethodsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        $(document).on('change', 'select[name=plant_id]', function() {
+            var select = $(this);
+            var methodsContainer = $('#sample-point-form');
+            var plantId = select.val();
+
+            if (plantId) {
+                // Show loading indicator
+                methodsContainer.html(
+                    '<div class="text-center p-4"><i class="fa fa-spinner fa-spin"></i> Loading samples...</div>'
+                );
+
+                $.ajax({
+                    url: "{{ route('admin.submission.schedule.get_sample_by_plant_id', ':id') }}".replace(
+                        ':id', plantId),
+                    type: "GET",
+                    dataType: "json",
+                    success: function(response) {
+                        console.log('AJAX Response:', response); // Debug log
+                        methodsContainer.empty();
+
+                        // Check response structure
+                        if (!response || !response.success || !response.data) {
+                            console.error('Invalid response:', response);
+                            methodsContainer.html(
+                                '<p class="text-danger">Error: Invalid response from server</p>');
+                            return;
+                        }
+
+                        var sampleIndex = 0;
+                        var data = response.data;
+
+                        // Render main plant samples first (if any)
+                        if (data.main_plant && data.main_plant.samples && Array.isArray(data.main_plant
+                                .samples)) {
+                            if (data.main_plant.samples.length > 0) {
+                                var mainPlantHeader = `
+                                    <div class="container bg-info bg-opacity-10 p-3 rounded mb-3">
+                                        <h5 class="mb-0"><i class="bi bi-building"></i> ${data.main_plant.name} (Main Plant)</h5>
+                                    </div>
+                                `;
+                                methodsContainer.append(mainPlantHeader);
+
+                                data.main_plant.samples.forEach(function(sample) {
+                                    console.log('Rendering main plant sample:',
+                                        sample); // Debug log
+                                    methodsContainer.append(renderSampleCard(sample,
+                                        sampleIndex++, null));
+                                });
+                            }
+                        }
+
+                        // Render sub plants with their samples
+                        if (data.sub_plants && Array.isArray(data.sub_plants) && data.sub_plants
+                            .length > 0) {
+                            data.sub_plants.forEach(function(subPlant) {
+                                if (subPlant.samples && Array.isArray(subPlant.samples) &&
+                                    subPlant.samples.length > 0) {
+                                    var subPlantHeader = `
+                                        <div class="container bg-secondary bg-opacity-10 p-3 rounded mb-3 mt-4">
+                                            <h5 class="mb-0"><i class="bi bi-building-fill"></i> ${subPlant.name} (Sub Plant)</h5>
+                                        </div>
+                                    `;
+                                    methodsContainer.append(subPlantHeader);
+
+                                    subPlant.samples.forEach(function(sample) {
+                                        console.log('Rendering sub plant sample:',
+                                            sample); // Debug log
+                                        methodsContainer.append(renderSampleCard(sample,
+                                            sampleIndex++, subPlant.name));
+                                    });
+                                }
+                            });
+                        }
+
+                        // If no samples found
+                        if (sampleIndex === 0) {
+                            methodsContainer.html(
+                                '<p class="text-warning">No samples found for this plant. Please make sure the plant has samples.</p>'
+                            );
+                        }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr, status, error);
                         methodsContainer.html(
-                        '<p class="text-danger">Failed to load test methods.</p>');
+                            '<p class="text-danger">Failed to load samples. Please try again.</p>');
                     }
                 });
             } else {
@@ -285,89 +372,121 @@
             }
         });
 
+        // Handle sub plant selection - same logic as main plant
         $(document).on('change', 'select[name=sub_plant_id]', function() {
             var select = $(this);
-            if (select.val()) {
-                var methodsContainer = $('#sample-point-form');
+            var methodsContainer = $('#sample-point-form');
+            var subPlantId = select.val();
+
+            if (subPlantId) {
+                // Show loading indicator
+                methodsContainer.html(
+                    '<div class="text-center p-4"><i class="fa fa-spinner fa-spin"></i> Loading samples...</div>'
+                );
 
                 $.ajax({
                     url: "{{ route('admin.submission.schedule.get_sample_by_plant_id', ':id') }}".replace(
-                        ':id',
-                        select.val()),
+                        ':id', subPlantId),
                     type: "GET",
                     dataType: "json",
-                    success: function(data) {
-
+                    success: function(response) {
+                        console.log('AJAX Response (Sub Plant):', response); // Debug log
                         methodsContainer.empty();
-                        data.all_samples.forEach(function(sample, sampleIndex) {
-                            var id = 'test_method_' + sampleIndex;
-                            let testMethodsHtml = '';
-                            sample.test_methods.forEach((test_method_item, testIndex) => {
-                                testMethodsHtml += `
-                            <div class="row align-items-center mb-2">
-                                <div class="col-3 test-method">
-                                    <i class="bi bi-beaker icon-lab"></i> ${testIndex + 1}. ${test_method_item.master_test_method.name}
-                                </div> 
-                                <div class="col-3">   
-                                    <select name="frequency_id-${test_method_item.master_test_method.id}-${sample.id}" class="form-control" required>
-                                        @foreach ($frequencies as $frequency)
-                                            <option value="{{ $frequency->id }}">{{ $frequency->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-3">
-                                    <input class="form-control" name="schedule_hour-${test_method_item.master_test_method.id}-${sample.id}" type="time"  step="60">
-                                </div>
-                                <div class="col-3 d-flex align-items-center">
-                                    <div class=" me-2 m-1">
-                                        <input class="form-check-input" type="checkbox" value="${test_method_item.master_test_method.id}" name="test_method_id-${test_method_item.id}[]">
-                                    </div>
-                                    <i class="bi bi-gear-fill"></i>
-                                </div>
-                            </div>
-                        `;
-                            });
 
-                            var methodHtml = `
-                        <div class="container bg-white p-4 rounded shadow col-lg-12"> 
-                            <div class="card mb-3">
-                                <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                                    <div>
-                                        <strong>${sample.sample_plant?.name}</strong><br>
-                                        <small class="text-muted">Location:  </small>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-primary">  Tests</span>
-                                        <div class="m-1 m-0">
-                                            <input class="form-check-input" type="checkbox" name="sample_points[]" checked value="${sample.id}" id="${id}">
+                        // Check response structure
+                        if (!response || !response.success || !response.data) {
+                            console.error('Invalid response:', response);
+                            methodsContainer.html(
+                                '<p class="text-danger">Error: Invalid response from server</p>');
+                            return;
+                        }
+
+                        var sampleIndex = 0;
+                        var data = response.data;
+
+                        // Render sub plant samples
+                        if (data.sub_plants && Array.isArray(data.sub_plants) && data.sub_plants
+                            .length > 0) {
+                            data.sub_plants.forEach(function(subPlant) {
+                                if (subPlant.samples && Array.isArray(subPlant.samples) &&
+                                    subPlant.samples.length > 0) {
+                                    var subPlantHeader = `
+                                        <div class="container bg-secondary bg-opacity-10 p-3 rounded mb-3">
+                                            <h5 class="mb-0"><i class="bi bi-building-fill"></i> ${subPlant.name} (Sub Plant)</h5>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="card-body p-2">
-                                    <div class="row text-muted mb-2">
-                                        <div class="col-3">{{ __('test_method.test_method') }}</div>
-                                        <div class="col-3">Frequency</div>
-                                        <div class="col-3">Schedule</div>
-                                        <div class="col-3">Status</div>
-                                    </div>
-                                    ${testMethodsHtml}
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                                    `;
+                                    methodsContainer.append(subPlantHeader);
 
-                            methodsContainer.append(methodHtml);
-                        });
+                                    subPlant.samples.forEach(function(sample) {
+                                        console.log('Rendering sub plant sample:',
+                                            sample); // Debug log
+                                        methodsContainer.append(renderSampleCard(sample,
+                                            sampleIndex++, subPlant.name));
+                                    });
+                                }
+                            });
+                        }
 
+                        // If no samples found
+                        if (sampleIndex === 0) {
+                            methodsContainer.html(
+                                '<p class="text-warning">No samples found for this sub plant. Please make sure the sub plant has samples.</p>'
+                            );
+                        }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr, status, error);
                         methodsContainer.html(
-                            '<p class="text-danger">Failed to load test methods.</p>');
+                            '<p class="text-danger">Failed to load samples. Please try again.</p>');
                     }
                 });
             } else {
-                var methodsContainer = $('#sample-point-form');
                 methodsContainer.empty();
+            }
+        });
+
+        // Enable/disable test method checkboxes and inputs based on sample point checkbox
+        $(document).on('change', '.sample-point-checkbox', function() {
+            var sampleId = $(this).data('sample-id');
+            var isChecked = $(this).is(':checked');
+
+            // Find all test method checkboxes and inputs for this sample
+            $(this).closest('.card').find('.test-method-checkbox, select[name^="frequency_id-' + sampleId +
+                '-"], input[name^="schedule_hour-' + sampleId + '-"]').prop('disabled', !isChecked);
+
+            // Uncheck test method checkboxes if sample point is unchecked
+            if (!isChecked) {
+                $(this).closest('.card').find('.test-method-checkbox').prop('checked', false);
+            }
+        });
+
+        // Validate form before submission
+        $('form').on('submit', function(e) {
+            var checkedSamplePoints = $('input[name="sample_points[]"]:checked').length;
+
+            if (checkedSamplePoints === 0) {
+                e.preventDefault();
+                alert('{{ __('general.please_select_at_least_one_sample_point') }}');
+                return false;
+            }
+
+            // Check if at least one test method is selected for each checked sample point
+            var hasError = false;
+            $('input[name="sample_points[]"]:checked').each(function() {
+                var sampleId = $(this).data('sample-id');
+                var checkedTestMethods = $(this).closest('.card').find('input[name="test_method_id[' +
+                    sampleId + '][]"]:checked').length;
+
+                if (checkedTestMethods === 0) {
+                    hasError = true;
+                    return false;
+                }
+            });
+
+            if (hasError) {
+                e.preventDefault();
+                alert('{{ __('general.please_select_at_least_one_test_method_for_each_sample_point') }}');
+                return false;
             }
         });
     </script>
@@ -466,4 +585,4 @@
             }
         })
     </script>
-@endsection 
+@endsection

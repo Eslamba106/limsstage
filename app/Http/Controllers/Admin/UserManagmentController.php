@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class UserManagmentController extends Controller
@@ -142,9 +143,20 @@ class UserManagmentController extends Controller
 
     public function destroy($id){
         $this->authorize('delete_user');
-        $user = (new User())->findOrFail($id);
-        $user->delete();
-        return redirect()->route("user_managment")->with("success", __(   'general.deleted_successfully'));
+        
+        try {
+            $user = (new User())->findOrFail($id);
+            $user->delete();
+            
+            return redirect()->route("user_managment")->with("success", __('general.deleted_successfully'));
+        } catch (\Exception $e) {
+            Log::error('Error deleting user: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $id
+            ]);
+
+            return back()->withErrors(['error' => __('general.something_went_wrong')]);
+        }
     }
  
   

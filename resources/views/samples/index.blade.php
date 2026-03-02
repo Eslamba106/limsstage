@@ -64,9 +64,11 @@
                         </button>
                          @endcan --}}
                         @can('delete_sample')
-                            <button type="submit" name="bulk_action_btn" value="delete"
-                                class="btn btn-danger delete_confirm mt-3 mr-2"> <i class="la la-trash"></i>
-                                {{ __('dashboard.delete') }}</button>
+                            <button type="button" name="bulk_action_btn" value="delete"
+                                class="btn btn-danger delete-bulk-confirm mt-3 mr-2" id="bulk-delete-btn">
+                                <i class="la la-trash"></i>
+                                {{ __('dashboard.delete') }}
+                            </button>
                         @endcan
                         @can('create_sample')
                             <a href="{{ route('admin.sample.create') }}" class="btn btn-secondary mt-3 mr-2">
@@ -97,15 +99,33 @@
                                         <span class="text-muted">#{{ $sample_item->id }}</span>
                                     </label>
                                 </th>
-                                <td class="text-center">{{ $sample_item->plant_main->name }} @if ($sample_item->sub_plant)
+                                <td class="text-center">
+                                    @if ($sample_item->plant_main)
+                                        {{ $sample_item->plant_main->name }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                    @if ($sample_item->sub_plant)
                                         - {{ $sample_item->sub_plant->name }}
                                     @endif
                                 </td>
-                                <td class="text-center">{{ $sample_item->sample_plant->name }}</td>
+                                <td class="text-center">
+                                    @if ($sample_item->sample_plant)
+                                        {{ $sample_item->sample_plant->name }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <ul class="list-unstyled m-0">
                                         @foreach ($sample_item->test_methods as $test_method_item)
-                                            <li>{{ $test_method_item->master_test_method->name }}</li>
+                                            <li>
+                                                @if ($test_method_item->master_test_method)
+                                                    {{ $test_method_item->master_test_method->name }}
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </li>
                                         @endforeach
                                     </ul>
                                 </td>
@@ -122,8 +142,11 @@
                                     @endcan
                                     @can('delete_sample')
                                         <a href="{{ route('admin.sample.delete', $sample_item->id) }}"
-                                            class="btn btn-danger btn-sm" title="@lang('dashboard.delete')"><i
-                                                class="fa fa-trash"></i></a>
+                                            class="btn btn-danger btn-sm delete-single-confirm" 
+                                            title="@lang('dashboard.delete')"
+                                            data-sample-id="{{ $sample_item->id }}">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
                                     @endcan
 
                                     @can('edit_sample')
@@ -146,4 +169,76 @@
 
 
 
+@endsection
+
+@section('js')
+    <script>
+        // Sweet Alert for single delete
+        $(document).on('click', '.delete-single-confirm', function(e) {
+            e.preventDefault();
+
+            const deleteUrl = $(this).attr('href');
+            const sampleId = $(this).data('sample-id') || '';
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+
+        // Sweet Alert for bulk delete
+        $(document).on('click', '#bulk-delete-btn', function(e) {
+            e.preventDefault();
+
+            const checkedItems = $('input.check_bulk_item:checked').length;
+            const btn = $(this);
+
+            if (checkedItems === 0) {
+                Swal.fire({
+                    title: '{{ translate('no_selection') }}',
+                    text: '{{ translate('please_select_at_least_one_item') }}',
+                    icon: 'warning',
+                    confirmButtonText: '{{ translate('ok') }}'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + ' (' + checkedItems +
+                    ' {{ translate('items_selected') }})',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    // Create a temporary submit button and click it
+                    const form = btn.closest('form');
+                    const tempBtn = $('<button>').attr({
+                        type: 'submit',
+                        name: 'bulk_action_btn',
+                        value: 'delete',
+                        style: 'display: none;'
+                    });
+                    form.append(tempBtn);
+                    tempBtn.click();
+                }
+            });
+        });
+    </script>
 @endsection

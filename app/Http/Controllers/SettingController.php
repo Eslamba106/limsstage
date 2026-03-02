@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\UiSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SettingController extends Controller
 {
@@ -21,19 +22,38 @@ class SettingController extends Controller
 
     public function translate_submit(Request $request, $position)
     {
-        DB::connection('tenant')->table('ui_settings')
-            ->where('key', $request->key)
-            ->where('position', $position)
-            ->update([
-                'value' => $request->value,
+        try {
+            $request->validate([
+                'key' => 'required|string',
+                'value' => 'nullable|string',
             ]);
+
+            DB::connection('tenant')->table('ui_settings')
+                ->where('key', $request->key)
+                ->where('position', $position)
+                ->update([
+                    'value' => $request->value,
+                ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating translation: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update translation'], 500);
+        }
     }
     public function translate_key_remove(Request $request, $position)
     {
-        DB::connection('tenant')->table('ui_settings')
-            ->where('key', $request->key)
-            ->where('position', $position)
-            ->delete();
+        try {
+            $request->validate([
+                'key' => 'required|string',
+            ]);
+
+            DB::connection('tenant')->table('ui_settings')
+                ->where('key', $request->key)
+                ->where('position', $position)
+                ->delete();
+        } catch (\Exception $e) {
+            Log::error('Error removing translation key: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to remove translation key'], 500);
+        }
     }
 
     public function translate_list($position)

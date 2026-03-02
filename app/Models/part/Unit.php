@@ -15,7 +15,7 @@ class Unit extends Model
         use Prunable;
     public function prunable()
     {
-        $days = Tenant::first()->tenant_delete_days ?? 30;
+        $days = Tenant::first()?->tenant_delete_days ?? 30;
 
         return static::where('created_at', '<=', now()->subDays($days));
     }
@@ -24,5 +24,12 @@ class Unit extends Model
     {
         return $this->hasMany(TestMethodItem::class, 'unit', 'id');
     }
-
+    
+    /**
+     * Check if this unit is being used in any test method items
+     */
+    public function isInUse(): bool
+    {
+        return $this->test_method_items()->exists();
+    }
 }

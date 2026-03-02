@@ -23,6 +23,7 @@
     use App\Models\Certificate;
     use App\Http\Controllers\CertificateController;
     use App\Http\Controllers\CoaGenerationSettingController;
+    use App\Http\Controllers\ReportGenerationSettingController;
     use App\Http\Controllers\LandingPageController;
     use App\Models\Schema;
     use App\Models\Tenant;
@@ -133,6 +134,12 @@
         Route::get('/schedule/edit/{id}', [SampleRoutineSchedulerController::class, 'edit'])->name('admin.submission.schedule.edit');
         Route::patch('/schedule/update/{id}', [SampleRoutineSchedulerController::class, 'update'])->name('admin.submission.schedule.update');
         Route::get('/schedule/get_sample_by_plant_id/{id}', [SampleRoutineSchedulerController::class, 'get_sample_by_plant_id'])->name('admin.submission.schedule.get_sample_by_plant_id');
+        
+        // Barcode operations for schedule
+        Route::get('/schedule/scan', [SampleRoutineSchedulerController::class, 'scanPage'])->name('admin.submission.schedule.scan');
+        Route::post('/schedule/barcode/receive', [SampleRoutineSchedulerController::class, 'updateStatusByBarcode'])->name('admin.submission.schedule.barcode.receive');
+        Route::post('/schedule/barcode/start-work', [SampleRoutineSchedulerController::class, 'startWorkByBarcode'])->name('admin.submission.schedule.barcode.start-work');
+        Route::get('/schedule/start-work/{id}', [SampleRoutineSchedulerController::class, 'changeStatusToStartWork'])->name('admin.submission.schedule.start-work');
     });
 
     // Result Management
@@ -174,6 +181,11 @@
         Route::get('add-new', [COATemplateController::class, 'add_template_designer'])->name('admin.add_template_designer');
         Route::get('assign/{id}', [COATemplateController::class, 'assign_page'])->name('admin.assign_template_designer_page');
         Route::post('assign_to_sample', [COATemplateController::class, 'assign'])->name('admin.assign_template_designer');
+        Route::get('assign-all', [COATemplateController::class, 'assignAll'])->name('admin.assign_all_templates');
+        Route::get('toggle-sample/{templateId}/{sampleId}', [COATemplateController::class, 'toggleSampleAssignment'])->name('admin.toggle_sample_assignment');
+        Route::get('toggle-plant/{templateId}/{plantId}', [COATemplateController::class, 'togglePlantAssignment'])->name('admin.toggle_plant_assignment');
+        Route::get('delete-sample/{templateId}/{sampleId}', [COATemplateController::class, 'deleteSampleAssignment'])->name('admin.delete_sample_assignment');
+        Route::get('delete-plant/{templateId}/{plantId}', [COATemplateController::class, 'deletePlantAssignment'])->name('admin.delete_plant_assignment');
     });
     // CAO Management
     Route::group(['prefix' => 'coa-settings'], function () {
@@ -293,6 +305,16 @@
         Route::get('/delete/{id}', [CoaGenerationSettingController::class, 'delete'])->name('coa_generation_setting.delete');
     });
 
+    // Report Generation Settings
+    Route::group(['prefix' => 'report_generation_setting'], function () {
+        Route::get('/', [ReportGenerationSettingController::class, 'index'])->name('report_generation_setting.list');
+        Route::get('/create', [ReportGenerationSettingController::class, 'create'])->name('report_generation_setting.create');
+        Route::post('/create', [ReportGenerationSettingController::class, 'store'])->name('report_generation_setting.store');
+        Route::get('/edit/{id}', [ReportGenerationSettingController::class, 'edit'])->name('report_generation_setting.edit');
+        Route::patch('/update/{id}', [ReportGenerationSettingController::class, 'update'])->name('report_generation_setting.update');
+        Route::get('/delete/{id}', [ReportGenerationSettingController::class, 'delete'])->name('report_generation_setting.delete');
+    });
+
 
     // Client Managment
     Route::group(['prefix' => 'certificate'], function () {
@@ -302,6 +324,8 @@
         Route::get('/edit/{id}', [CertificateController::class, 'edit'])->name('certificate.edit');
         Route::patch('/update/{id}', [CertificateController::class, 'update'])->name('certificate.update');
         Route::get('/delete/{id}', [CertificateController::class, 'delete'])->name('certificate.delete');
+        Route::post('/send-email/{id}', [CertificateController::class, 'sendEmail'])->name('certificate.send_email');
+        Route::get('/download/{id}', [CertificateController::class, 'download'])->name('certificate.download');
     });
 
     Route::group(['prefix' => 'profile', 'as' => 'profile.'], function () {

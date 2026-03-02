@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\second_part;
 
 use App\Http\Controllers\Controller;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SubmissionController extends Controller
 {
@@ -53,37 +55,89 @@ class SubmissionController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create_submission');
+
         $request->validate([
-            'plant_id'               => 'required|exists:plants,id',
-            'sub_plant_id'           => 'nullable|exists:plants,id',
-            'plant_sample_id'        => 'required|exists:plant_samples,id',
-            'priority'               => 'required|in:high,normal,critical',
-            'sampling_date_and_time' => 'nullable|date',
-            'comment'                => 'nullable|string|max:255',
+            'plant_id'                    => 'required|exists:plants,id',
+            'sub_plant_id'                => 'nullable|exists:plants,id',
+            'plant_sample_id'             => 'required|exists:plant_samples,id',
+            'priority'                    => 'required|in:high,normal,critical',
+            'sampling_date_and_time'      => 'nullable|date',
+            'comment'                     => 'nullable|string|max:255',
+            'sample_test_method_item_id'  => 'required|array|min:1',
+            'sample_test_method_item_id.*' => 'required|exists:sample_test_methods,id',
+        ], [
+            'sample_test_method_item_id.required' => __('general.test_method_items_required'),
+            'sample_test_method_item_id.array'    => __('general.test_method_items_must_be_array'),
+            'sample_test_method_item_id.min'      => __('general.at_least_one_test_method_required'),
         ]);
-        $date       = Carbon::createFromFormat('Y-m-d\TH:i', $request->sampling_date_and_time);
-        $sample     = Sample::where('plant_sample_id', $request->plant_sample_id)->first();
-        $submission = Submission::create([
-            'plant_id'               => $request->plant_id,
-            'sub_plant_id'           => $request->sub_plant_id,
-            'plant_sample_id'        => $request->plant_sample_id,
-            'sample_id'              => $sample->id,
-            'priority'               => $request->priority,
-            'sampling_date_and_time' => $date,
-            'comment'                => $request->comment,
-        ]);
-        $submission->submission_number = 'SUB-' . str_pad($submission->id, 6, '0', STR_PAD_LEFT);
-        $submission->save();
-        // dd($request->sample_test_method_item_id);
-        foreach ($request->input("sample_test_method_item_id") as $key => $sample_test_method_item_main) {
-            // dd($sample_test_method_item);
-            DB::table('submission_items')->insert([
-                'sample_test_method_item_id' => $sample_test_method_item_main,
-                'submission_id'              => $submission->id,
-            ]);
+
+        // Find the sample and validate it exists
+        $sample = Sample::where('plant_sample_id', $request->plant_sample_id)->first();
+
+        if (!$sample) {
+            return back()->withErrors(['plant_sample_id' => __('general.sample_not_found')])
+                ->withInput();
         }
 
-        return redirect()->route('admin.submission')->with('success', __('general.created_successfully'));
+        // Parse date only if provided
+        $date = null;
+        if ($request->filled('sampling_date_and_time')) {
+            try {
+                $date = Carbon::createFromFormat('Y-m-d\TH:i', $request->sampling_date_and_time);
+            } catch (\Exception $e) {
+                return back()->withErrors(['sampling_date_and_time' => __('general.invalid_date_format')])
+                    ->withInput();
+            }
+        }
+
+        // Use database transaction to ensure data consistency
+        DB::connection('tenant')->beginTransaction();
+
+        try {
+            $submission = Submission::create([
+                'plant_id'               => $request->plant_id,
+                'sub_plant_id'           => $request->sub_plant_id,
+                'plant_sample_id'        => $request->plant_sample_id,
+                'sample_id'              => $sample->id,
+                'priority'               => $request->priority,
+                'sampling_date_and_time' => $date,
+                'comment'                => $request->comment,
+            ]);
+
+            // Generate submission number
+            $submission->submission_number = 'SUB-' . str_pad($submission->id, 6, '0', STR_PAD_LEFT);
+            $submission->save();
+
+            // Create submission items using the model relationship
+            $submissionItems = collect($request->input('sample_test_method_item_id', []))
+                ->map(function ($sampleTestMethodItemId) {
+                    return [
+                        'sample_test_method_item_id' => $sampleTestMethodItemId,
+                        'created_at'                 => now(),
+                        'updated_at'                 => now(),
+                    ];
+                })
+                ->toArray();
+
+            // Use relationship method for automatic connection handling
+            if (!empty($submissionItems)) {
+                $submission->submission_test_method_items()->createMany($submissionItems);
+            }
+
+            DB::connection('tenant')->commit();
+
+            return redirect()->route('admin.submission')->with('success', __('general.created_successfully'));
+        } catch (\Exception $e) {
+            DB::connection('tenant')->rollBack();
+
+            Log::error('Error creating submission: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->except(['_token', 'password'])
+            ]);
+
+            return back()->withErrors(['error' => __('general.something_went_wrong')])
+                ->withInput();
+        }
     }
 
     public function edit($id)
@@ -100,42 +154,95 @@ class SubmissionController extends Controller
     public function update(Request $request, $id)
     {
         $this->authorize('edit_submission');
-        // dd($request->all());
-        $submission = Submission::findOrFail($id);
-        $request->validate([
-            'plant_id'               => 'required|exists:plants,id',
-            'sub_plant_id'           => 'nullable|exists:plants,id',
-            'plant_sample_id'        => 'required|exists:plant_samples,id',
-            'priority'               => 'required|in:high,normal,critical',
-            'sampling_date_and_time' => 'nullable|date',
-            'comment'                => 'nullable|string|max:255',
-        ]);
-        $date = Carbon::createFromFormat('Y-m-d\TH:i', $request->sampling_date_and_time);
-        $submission->update([
-            'plant_id'               => $request->plant_id,
-            'sub_plant_id'           => $request->sub_plant_id,
-            'plant_sample_id'        => $request->plant_sample_id,
-            'priority'               => $request->priority,
-            'sampling_date_and_time' => $date,
-            'comment'                => $request->comment,
-        ]);
-        $submission_items = SubmissionItem::where('submission_id', $id)->get();
 
-        foreach ($submission_items as $submission_item) {
-            $inputKey = "sample_test_method_item_id-" . $submission_item->id;
-            if (! array_key_exists($inputKey, $request->all())) {
-                $submission_item->delete();
+        $submission = Submission::findOrFail($id);
+
+        $request->validate([
+            'plant_id'                    => 'required|exists:plants,id',
+            'sub_plant_id'                => 'nullable|exists:plants,id',
+            'plant_sample_id'             => 'required|exists:plant_samples,id',
+            'priority'                    => 'required|in:high,normal,critical',
+            'sampling_date_and_time'      => 'nullable|date',
+            'comment'                     => 'nullable|string|max:255',
+            'sample_test_method_item_id'  => 'nullable|array',
+            'sample_test_method_item_id.*' => 'required|exists:sample_test_methods,id',
+        ]);
+
+        // Find the sample and validate it exists
+        $sample = Sample::where('plant_sample_id', $request->plant_sample_id)->first();
+
+        if (!$sample) {
+            return back()->withErrors(['plant_sample_id' => __('general.sample_not_found')])
+                ->withInput();
+        }
+
+        // Parse date only if provided
+        $date = null;
+        if ($request->filled('sampling_date_and_time')) {
+            try {
+                $date = Carbon::createFromFormat('Y-m-d\TH:i', $request->sampling_date_and_time);
+            } catch (\Exception $e) {
+                return back()->withErrors(['sampling_date_and_time' => __('general.invalid_date_format')])
+                    ->withInput();
             }
         }
-        if (isset($request->sample_test_method_item_id)) {
-            foreach ($request->sample_test_method_item_id as $sample_test_method_item) {
-                DB::table('submission_items')->insert([
-                    'sample_test_method_item_id' => $sample_test_method_item,
-                    'submission_id'              => $submission->id,
-                ]);
+
+        // Use database transaction
+        DB::connection('tenant')->beginTransaction();
+
+        try {
+            $submission->update([
+                'plant_id'               => $request->plant_id,
+                'sub_plant_id'           => $request->sub_plant_id,
+                'plant_sample_id'        => $request->plant_sample_id,
+                'sample_id'              => $sample->id,
+                'priority'               => $request->priority,
+                'sampling_date_and_time' => $date,
+                'comment'                => $request->comment,
+            ]);
+
+            // Handle existing submission items
+            $submission_items = SubmissionItem::where('submission_id', $id)->get();
+
+            foreach ($submission_items as $submission_item) {
+                $inputKey = "sample_test_method_item_id-" . $submission_item->id;
+                if (!array_key_exists($inputKey, $request->all())) {
+                    $submission_item->delete();
+                }
             }
+
+            // Add new submission items using relationship
+            if ($request->has('sample_test_method_item_id') && is_array($request->sample_test_method_item_id)) {
+                $submissionItems = collect($request->input('sample_test_method_item_id', []))
+                    ->map(function ($sampleTestMethodItemId) {
+                        return [
+                            'sample_test_method_item_id' => $sampleTestMethodItemId,
+                            'created_at'                 => now(),
+                            'updated_at'                 => now(),
+                        ];
+                    })
+                    ->toArray();
+
+                if (!empty($submissionItems)) {
+                    $submission->submission_test_method_items()->createMany($submissionItems);
+                }
+            }
+
+            DB::connection('tenant')->commit();
+
+            return redirect()->route('admin.submission')->with('success', __('general.updated_successfully'));
+        } catch (\Exception $e) {
+            DB::connection('tenant')->rollBack();
+
+            Log::error('Error updating submission: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'submission_id' => $id,
+                'request' => $request->except(['_token', 'password'])
+            ]);
+
+            return back()->withErrors(['error' => __('general.something_went_wrong')])
+                ->withInput();
         }
-        return redirect()->route('admin.submission')->with('success', __('general.updated_successfully'));
     }
 
     public function destroy($id)
@@ -149,13 +256,38 @@ class SubmissionController extends Controller
     public function get_test_method_by_sample_id($id)
     {
         $this->authorize('create_sample');
-        $sample      = Sample::where('plant_sample_id', $id)->select('id')->first();
-        $test_method = SampleTestMethod::where('sample_id', $sample->id)->with('master_test_method')->get();
 
-        return response()->json([
-            'status'       => 200,
-            "test_methods" => $test_method,
-        ]);
+        try {
+            $sample = Sample::where('plant_sample_id', $id)->select('id')->first();
+
+            if (!$sample) {
+                return response()->json([
+                    'status'       => 404,
+                    'message'      => __('general.sample_not_found'),
+                    "test_methods" => [],
+                ], 404);
+            }
+
+            $test_methods = SampleTestMethod::where('sample_id', $sample->id)
+                ->with('master_test_method')
+                ->get();
+
+            return response()->json([
+                'status'       => 200,
+                "test_methods" => $test_methods,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error loading test methods: ' . $e->getMessage(), [
+                'plant_sample_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status'       => 500,
+                'message'      => __('general.something_went_wrong'),
+                "test_methods" => [],
+            ], 500);
+        }
     }
 
     // schedule submission
@@ -177,25 +309,27 @@ class SubmissionController extends Controller
         return response()->json(['success' => true, 'message' => translate('The_sample_has_been_received')]);
     }
 
-    public function scanPage(Request $request){
+    public function scanPage(Request $request)
+    {
         return view('second_part.submission.read_barcode');
     }
 
-    public function change_status($id , $status){
-        
-        $submission = Submission::findOrFail($id); 
+    public function change_status($id, $status)
+    {
+
+        $submission = Submission::findOrFail($id);
 
         $submission->status = $status;
         $submission->save();
-        return redirect()->back()->with('success' , translate('updated_successfully'));
+        return redirect()->back()->with('success', translate('updated_successfully'));
     }
-    public function change_status_without_qr($id ){
-        
-        $submission = Submission::findOrFail($id); 
+    public function change_status_without_qr($id)
+    {
+
+        $submission = Submission::findOrFail($id);
 
         $submission->status = 'second_step';
         $submission->save();
-        return redirect()->back()->with('success' , translate('updated_successfully'));
+        return redirect()->back()->with('success', translate('updated_successfully'));
     }
-
 }

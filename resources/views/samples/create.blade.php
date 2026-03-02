@@ -303,7 +303,7 @@
                     success: function(data) {
 
                         if (data) {
-                            //   
+                            //
                             if (data && data.components && data.components.length > 0) {
                                 $('select[name="main_components"]').empty().prop('disabled', false);
                                 var select = $('select[name="main_components"]');
@@ -357,7 +357,7 @@
                                         <div class="border border-primary rounded p-3 mb-3"
                                             style="background-color: #f8f9fa;">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div> 
+                                                <div>
                                                     <input type="checkbox" id="tds" name="component-${component.id}" checked>
                                                     <label for="tds" class="fw-bold text-primary">${component.name}</label>
                                                 </div>
@@ -379,26 +379,26 @@
                                                 <div>
                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
                                                       <select name="warning_limit_type-${component.id}" class="form-control"   onchange="only_one_general_change_warning_limit_type(${component.id})">
-                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
-                                                            <option value="8646">&#8646;</option> 
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option>
 
                                                     </select>
                                                 </div>
                                                 <div class="text-end text-primary fw-bold">
                                                      <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
-                                                   
+
                                                     <select name="action_limit_type-${component.id}" class="form-control"   onchange="only_one_general_change_action_limit_type(${component.id})">
-                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
                                                             <option value="8646">&#8646;</option>
                                                     </select>
                                                     </div>
@@ -454,9 +454,9 @@
 
                                         <div class="border border-primary rounded p-3 mb-3"
                                             style="background-color: #f8f9fa;">
-                                          
+
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div> 
+                                                <div>
                                                     <input type="checkbox" id="tds" name="component-${data.component.id}" checked>
                                                     <label for="tds" class="fw-bold text-primary">${data.component.name}</label>
                                                 </div>
@@ -465,8 +465,8 @@
                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <div>
                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
-                                                    <input type="number"  name="warning_limit-${data.component.id}" class="form-control"     onkeyup="only_one_change_warning_limit_type(${data.component.id})"> 
-                                                    <input type="number"  name="warning_limit_end-${data.component.id}" class="form-control d-none"     onkeyup="only_one_change_warning_limit_type(${data.component.id})"> 
+                                                    <input type="number"  name="warning_limit-${data.component.id}" class="form-control"     onkeyup="only_one_change_warning_limit_type(${data.component.id})">
+                                                    <input type="number"  name="warning_limit_end-${data.component.id}" class="form-control d-none"     onkeyup="only_one_change_warning_limit_type(${data.component.id})">
                                                 </div>
                                                 <div class="text-end text-primary fw-bold">
                                                      <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
@@ -478,26 +478,26 @@
                                                 <div>
                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
                                                       <select name="warning_limit_type-${data.component.id}" class="form-control"   onchange="only_one_change_warning_limit_type(${data.component.id})">
-                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
                                                             <option value="8646">&#8646;</option>
                                                     </select>
                                                 </div>
                                                 <div class="text-end text-primary fw-bold">
                                                      <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
-                                                   
+
                                                     <select name="action_limit_type-${data.component.id}" class="form-control"   onchange="only_one_change_action_limit_type(${data.component.id})">
-                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
                                                             <option value=">">&gt;</option>
-                                                            <option value="8646">&#8646;</option> 
+                                                            <option value="8646">&#8646;</option>
                                                     </select>
                                                     </div>
                                             </div>
@@ -982,12 +982,37 @@
     <script>
         let methodIndex = 0;
 
+        // Initialize event delegation when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Use event delegation for delete buttons (works with dynamically added elements)
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-test-method-btn')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.remove-test-method-btn');
+                    const methodIndex = button.getAttribute('data-method-index');
+                    const testMethodElement = document.getElementById('test_method-' + methodIndex);
+
+                    if (testMethodElement) {
+                        // Show confirmation dialog
+                        if (confirm('{{ __('general.are_you_sure_delete_this') }}?')) {
+                            testMethodElement.remove();
+                        }
+                    } else {
+                        console.error('Test method element not found:', 'test_method-' + methodIndex);
+                    }
+                }
+            });
+        });
+
         function add_test_method() {
             const container = document.getElementById('test_methods_main');
             methodIndex++;
 
             const bladeContent = `
-        <div class="card-body border border-primary" id="test_method-${methodIndex}">
+        <div class="card-body border border-primary position-relative" id="test_method-${methodIndex}" style="margin-bottom: 20px;">
+            <button type="button" class="btn btn-danger btn-sm position-absolute remove-test-method-btn" data-method-index="${methodIndex}" style="top: 10px; {{ session()->get('locale') == 'ar' ? 'left: 10px;' : 'right: 10px;' }}" title="{{ __('general.delete') }}">
+                <i class="fa fa-trash"></i>
+            </button>
             <div class="row componants" id="componants-${methodIndex}">
                 <div class="col-md-6 col-lg-6">
                     <div class="form-group">
@@ -1008,14 +1033,8 @@
                         </select>
                     </div>
                 </div>
-                <div class="main_components col-lg-12" id="main_components-${methodIndex}"> 
+                <div class="main_components col-lg-12" id="main_components-${methodIndex}">
                 </div>
-            </div>
-
-            <div class="form-group mt-2" style="text-align: {{ session()->get('locale') == 'ar' ? 'left' : 'right' }};">
-                <button type="button" onclick="add_test_method()" class="btn btn-secondary mt-2">
-                    <i class="mdi mdi-plus"></i> {{ __('samples.add_another_test_method') }}
-                </button>
             </div>
         </div>
     `;
@@ -1080,7 +1099,7 @@
                                         <div class="border border-primary rounded p-3 mb-3"
                                             style="background-color: #f8f9fa;">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div> 
+                                                <div>
                                                      <input type="checkbox" id="tds"  name="component-${i}-${component.id}-${index+1}"  checked>
                                                     <label for="tds" class="fw-bold text-primary">${component.name}</label>
                                                 </div>
@@ -1102,26 +1121,26 @@
                                                 <div>
                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
                                                       <select name="warning_limit_type-${i}-${component.id}-${index+1}" class="form-control"   onchange="add_general_change_warning_limit_type(${component.id} , ${index+1} , ${i})">
-                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
-                                                            <option value="8646">&#8646;</option> 
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option>
                                                     </select>
                                                 </div>
                                                 <div class="text-end text-primary fw-bold">
                                                      <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
-                                                   
+
                                                     <select name="action_limit_type-${i}-${component.id}-${index+1}" class="form-control"   onchange="add_general_change_action_limit_type(${component.id} , ${index+1} , ${i})">
-                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
-                                                            <option value="8646">&#8646;</option> 
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option>
                                                     </select>
                                                     </div>
                                             </div>
@@ -1176,9 +1195,9 @@
 
                                         <div class="border border-primary rounded p-3 mb-3"
                                             style="background-color: #f8f9fa;">
-                                          
+
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <div> 
+                                                <div>
                                                      <input type="checkbox" id="tds" name="component-${i}-${data.component.id}" checked>
                                                     <label for="tds" class="fw-bold text-primary">${data.component.name}</label>
                                                 </div>
@@ -1187,8 +1206,8 @@
                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <div>
                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit') }}</label>
-                                                    <input type="number"  name="warning_limit-${i}-${data.component.id}" class="form-control"     onkeyup="add_only_one_change_warning_limit_type(${data.component.id},${i})"> 
-                                                    <input type="number"  name="warning_limit_end-${i}-${data.component.id}" class="form-control d-none"     onkeyup="add_only_one_change_warning_limit_type(${data.component.id},${i})"> 
+                                                    <input type="number"  name="warning_limit-${i}-${data.component.id}" class="form-control"     onkeyup="add_only_one_change_warning_limit_type(${data.component.id},${i})">
+                                                    <input type="number"  name="warning_limit_end-${i}-${data.component.id}" class="form-control d-none"     onkeyup="add_only_one_change_warning_limit_type(${data.component.id},${i})">
                                                 </div>
                                                 <div class="text-end text-primary fw-bold">
                                                      <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit') }}</label>
@@ -1200,27 +1219,27 @@
                                                 <div>
                                                     <label for="tds" class="fw-bold text-primary">{{ __('samples.warning_limit_type') }}</label>
                                                       <select name="warning_limit_type-${i}-${data.component.id}" class="form-control"   onchange="add_only_one_change_warning_limit_type(${data.component.id},${i})">
-                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
-                                                            <option value="8646">&#8646;</option> 
+                                                        <option value="">{{ __('samples.select_warning_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option>
 
                                                     </select>
                                                 </div>
                                                 <div class="text-end text-primary fw-bold">
                                                      <label for="tds" class="fw-bold text-primary">{{ __('samples.action_limit_type') }}</label>
-                                                   
+
                                                     <select name="action_limit_type-${i}-${data.component.id}" class="form-control"   onchange="add_only_one_change_action_limit_type(${data.component.id},${i})">
-                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option> 
-                                                            <option value="=">=</option> 
-                                                            <option value=">=">&ge;</option> 
-                                                            <option value="<=">&le;</option> 
-                                                            <option value="<">&lt;</option> 
-                                                            <option value=">">&gt;</option> 
-                                                            <option value="8646">&#8646;</option> 
+                                                            <option value="">{{ __('samples.select_action_limit_type') }}</option>
+                                                            <option value="=">=</option>
+                                                            <option value=">=">&ge;</option>
+                                                            <option value="<=">&le;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value=">">&gt;</option>
+                                                            <option value="8646">&#8646;</option>
 
                                                     </select>
                                                     </div>

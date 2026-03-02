@@ -14,7 +14,7 @@ class CoaGenerationSetting extends Model
     use Prunable;
    public function prunable()
     {
-        $days = Tenant::first()->tenant_delete_days ?? 30;
+        $days = Tenant::first()?->tenant_delete_days ?? 30;
 
         return static::where('created_at', '<=', now()->subDays($days));
     } 

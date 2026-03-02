@@ -65,13 +65,20 @@
                             </button>
                         @endcan
                         @can('delete_submission')
-                            <button type="submit" name="bulk_action_btn" value="delete"
-                                class="btn btn-danger delete_confirm mt-3 mr-2"> <i class="la la-trash"></i>
-                                {{ __('dashboard.delete') }}</button>
+                            <button type="button" name="bulk_action_btn" value="delete"
+                                class="btn btn-danger delete-bulk-confirm mt-3 mr-2" id="bulk-delete-btn">
+                                <i class="la la-trash"></i>
+                                {{ __('dashboard.delete') }}
+                            </button>
                         @endcan
                         @can('create_submission')
                             <a href="{{ route('admin.submission.schedule.create') }}" class="btn btn-secondary mt-3 mr-2">
                                 <i class="la la-refresh"></i> {{ __('dashboard.create') }}
+                            </a>
+                        @endcan
+                        @can('submission_management')
+                            <a href="{{ route('admin.submission.schedule.scan') }}" class="btn btn-info mt-3 mr-2">
+                                <i class="fa fa-barcode"></i> {{ translate('scan_barcode') }}
                             </a>
                         @endcan
                     </div>
@@ -101,12 +108,34 @@
                                         <span class="text-muted">#{{ $loop->index + 1 }}</span>
                                     </label>
                                 </th>
-                                <td class="text-center">{{ $submission_item->submission_number }} </td>
                                 <td class="text-center">
-                                    {{ \Carbon\Carbon::parse($submission_item->sampling_date_and_time)->format('M d, Y h:i A') }}
+                                    {{ $submission_item->submission_number }}
+                                    {{-- Hidden barcode element for printing --}}
+                                    <div style="display: none;" id="barcode-{{ $submission_item->id }}">
+                                        {!! $submission_item->barcode_image ?? '' !!}
+                                    </div>
                                 </td>
-                                <td class="text-center">{{ $submission_item->plant->name }} </td>
-                                <td class="text-center">{{ $submission_item->sample->sample_plant->name }} </td>
+                                <td class="text-center">
+                                    @if ($submission_item->created_at)
+                                        {{ \Carbon\Carbon::parse($submission_item->created_at)->format('M d, Y h:i A') }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if ($submission_item->plant)
+                                        {{ $submission_item->plant->name }}
+                                    @else
+                                        <span class="text-danger">Deleted Plant</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if ($submission_item->sample && $submission_item->sample->sample_plant)
+                                        {{ $submission_item->sample->sample_plant->name }}
+                                    @else
+                                        <span class="text-danger">Deleted Sample</span>
+                                    @endif
+                                </td>
 
                                 {{-- <td class="text-center">{{ $submission_item->status  }} </td>
                                 <td class="text-center">{{ $submission_item->priority  }} </td> --}}
@@ -122,25 +151,31 @@
                                                     '{{ __('general.Want_to_Turn_ON') }} {{ $submission_item->name }} ',
                                                     '{{ __('general.Want_to_Turn_OFF') }} {{ $submission_item->name }} ',
                                                     `<p>{{ __('general.if_enabled_this_product_will_be_available') }}</p>`,
-                                                    `<p>{{ __('general.if_disabled_this_product_will_be_hidden') }}</p>`)">  
+                                                    `<p>{{ __('general.if_disabled_this_product_will_be_hidden') }}</p>`)">
                                             <label class="form-check-label" for="flexSwitchCheckChecked"> </label>
                                         </div>
                                     </form>
                                 </td>  --}}
                                 @php
-                                
-                                            $statusColors = [
-                                                'in progress' => 'bg-warning text-dark',
-                                                'pending' => 'bg-secondary text-white',
-                                                'completed' => 'bg-success text-white',
-                                            ];
-                                        @endphp
-                                        <td class="text-center">
-                                        <span
-                                            class="badge {{ $statusColors[$submission_item->status] ?? 'bg-yellow text-dark' }}">
-                                            {{ $submission_item->status }}
-                                        </span>
-                                {{--  --}}</td>
+                                    $statusColors = [
+                                        'pending' => 'bg-secondary text-white',
+                                        'received' => 'bg-info text-white',
+                                        'in_progress' => 'bg-warning text-dark',
+                                        'completed' => 'bg-success text-white',
+                                    ];
+                                    
+                                    $statusTranslations = [
+                                        'pending' => translate('pending'),
+                                        'received' => translate('received'),
+                                        'in_progress' => translate('in_progress'),
+                                        'completed' => translate('completed'),
+                                    ];
+                                @endphp
+                                <td class="text-center">
+                                    <span class="badge {{ $statusColors[$submission_item->status] ?? 'bg-secondary text-white' }}">
+                                        {{ $statusTranslations[$submission_item->status] ?? $submission_item->status }}
+                                    </span>
+                                </td>
 
                                 {{-- <td class="text-center">
                                     @php
@@ -161,14 +196,58 @@
                                 <td class="text-center">
                                     @can('delete_submission')
                                         <a href="{{ route('admin.submission.schedule.delete', $submission_item->id) }}"
-                                            class="btn btn-danger btn-sm" title="@lang('dashboard.delete')"><i
-                                                class="fa fa-trash"></i></a>
+                                            class="btn btn-danger btn-sm delete-single-confirm" title="@lang('dashboard.delete')"
+                                            data-submission-number="{{ $submission_item->submission_number }}">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
                                     @endcan
                                     @can('edit_submission')
                                         <a href="{{ route('admin.submission.schedule.edit', $submission_item->id) }}"
-                                            class="btn btn-outline-info btn-sm" title="@lang('dashboard.edit')"><i
-                                                class="mdi mdi-pencil"></i> </a>
+                                            class="btn btn-outline-info btn-sm" title="@lang('dashboard.edit')">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </a>
                                     @endcan
+                                    
+                                    {{-- Start Work Button (when status is received) --}}
+                                    @if ($submission_item->status === 'received')
+                                        @can('create_result')
+                                            <a href="{{ route('admin.submission.schedule.start-work', $submission_item->id) }}"
+                                                class="btn btn-outline-warning text-dark btn-sm" title="{{ translate('start_work') }}">
+                                                <i class="fa fa-play"></i> {{ translate('start_work') }}
+                                            </a>
+                                        @endcan
+                                    @endif
+                                    
+                                    {{-- Add Result Button (when status is in_progress or completed) --}}
+                                    @if ($submission_item->status === 'in_progress' || $submission_item->status === 'completed')
+                                        @can('create_result')
+                                            @php
+                                                // Check if there are items without results
+                                                $hasItemWithoutResult = $submission_item->sample_routine_scheduler_items->contains(
+                                                    function ($item) {
+                                                        return !$item->result;
+                                                    }
+                                                );
+                                            @endphp
+
+                                            @if ($hasItemWithoutResult)
+                                                <a href="{{ route('admin.result.create', [$submission_item->id, 'schedule']) }}"
+                                                    class="btn btn-outline-warning text-dark btn-sm"
+                                                    title="@lang('results.add_result')">
+                                                    <i class="fa fa-plus"></i> @lang('results.add_result')
+                                                </a>
+                                            @endif
+                                        @endcan
+                                    @endif
+                                    
+                                    {{-- Print Barcode Button --}}
+                                    @if ($submission_item->submission_number)
+                                        <button type="button" class="btn btn-sm btn-primary"
+                                            onclick="printBarcode('{{ $submission_item->id }}', '{{ $submission_item->submission_number }}')"
+                                            title="{{ translate('print_barcode') }}">
+                                            <i class="fa fa-barcode"></i> {{ translate('print_barcode') }}
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -184,14 +263,80 @@
 @endsection
 @section('js')
     <script>
-        // $('#statusSwitch').on('change', function() {
-        //     if ($(this).is(':checked')) {
-        //         console.log('Status: ON');
-        //     } else {
-        //         console.log('Status: OFF');
-        //     }
-        // });
-        
+        /**
+         * Print barcode for schedule
+         */
+        function printBarcode(scheduleId, submissionNumber) {
+            const barcodeDiv = document.getElementById('barcode-' + scheduleId);
+            
+            let barcodeHtml = '';
+            if (barcodeDiv && barcodeDiv.innerHTML) {
+                barcodeHtml = barcodeDiv.innerHTML;
+            } else {
+                barcodeHtml = '<div style="font-family: monospace; font-size: 24px; padding: 20px; text-align: center;">' + submissionNumber + '</div>';
+            }
+
+            const printWindow = window.open('', '', 'width=400,height=300');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Barcode - ${submissionNumber}</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 10px;
+                            text-align: center;
+                            font-family: Arial, sans-serif;
+                        }
+                        .barcode-container {
+                            display: inline-block;
+                            padding: 5px;
+                        }
+                        h3 {
+                            margin-bottom: 10px;
+                            font-size: 14px;
+                            font-weight: bold;
+                        }
+                        img, svg {
+                            max-width: 100%;
+                            height: auto;
+                        }
+                        img {
+                            width: 700px;
+                            height: 100px;
+                        }
+                        @page {
+                            size: 80mm 40mm;
+                            margin: 2mm;
+                        }
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="barcode-container">
+                        <h3>${submissionNumber}</h3>
+                        <div>${barcodeHtml}</div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                setTimeout(function() {
+                                    window.close();
+                                }, 100);
+                            }, 250);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
     </script>
     <script>
         $('.status_form').on('submit', function(event) {
@@ -217,6 +362,75 @@
                             location.reload();
                         }, 2000);
                     }
+                }
+            });
+        });
+
+        // Sweet Alert for single delete
+        $(document).on('click', '.delete-single-confirm', function(e) {
+            e.preventDefault();
+
+            const deleteUrl = $(this).attr('href');
+            const submissionNumber = $(this).data('submission-number') || '';
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + (submissionNumber ?
+                    ' ({{ translate('submission_number') }}: ' + submissionNumber + ')' : ''),
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+
+        // Sweet Alert for bulk delete
+        $(document).on('click', '#bulk-delete-btn', function(e) {
+            e.preventDefault();
+
+            const checkedItems = $('input.check_bulk_item:checked').length;
+            const btn = $(this);
+
+            if (checkedItems === 0) {
+                Swal.fire({
+                    title: '{{ translate('no_selection') }}',
+                    text: '{{ translate('please_select_at_least_one_item') }}',
+                    icon: 'warning',
+                    confirmButtonText: '{{ translate('ok') }}'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + ' (' + checkedItems +
+                    ' {{ translate('items_selected') }})',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    // Create a temporary submit button and click it
+                    const form = btn.closest('form');
+                    const tempBtn = $('<button>').attr({
+                        type: 'submit',
+                        name: 'bulk_action_btn',
+                        value: 'delete',
+                        style: 'display: none;'
+                    });
+                    form.append(tempBtn);
+                    tempBtn.click();
                 }
             });
         });

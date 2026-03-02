@@ -18,13 +18,13 @@ class SampleTestMethodItem extends Model
     use Prunable;
    public function prunable()
     {
-        $days = Tenant::first()->tenant_delete_days ?? 30;
+        $days = Tenant::first()?->tenant_delete_days ?? 30;
 
         return static::where('created_at', '<=', now()->subDays($days));
     }   protected $guarded = ['id'];
     public function sample_test_method()
     {
-        return $this->belongsTo(SampleTestMethod::class, 'sample_test_method_id');
+        return $this->belongsTo(SampleTestMethod::class, 'test_method_id');
     }
     public function test_method_item(){
         return $this->belongsTo(TestMethodItem::class, 'test_method_item_id');

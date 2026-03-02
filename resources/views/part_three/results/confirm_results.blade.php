@@ -36,10 +36,10 @@
                         <thead>
                             <tr>
                                 <th><input class="bulk_check_all" type="checkbox" /></th>
-                                <th class="text-center" scope="col">{{ translate('sample_id')  }}</th>
+                                <th class="text-center" scope="col">{{ translate('sample_id') }}</th>
                                 <th class="text-center" scope="col">{{ translate('plant') }} </th>
                                 <th class="text-center" scope="col">{{ translate('last_change_by') }} </th>
-                                <th class="text-center" scope="col">{{ translate('Actions')  }}</th>
+                                <th class="text-center" scope="col">{{ translate('Actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,7 +51,9 @@
                                             value="{{ $result->id }}" />
                                     </label>
                                 </th>
-                                <td class="text-center">{{ $result->submission->submission_number }} </td>
+                                <td class="text-center">
+                                    {{ optional($result->submission)->submission_number ?? ($result->submission_number ?? '-') }}
+                                </td>
                                 <td class="text-center">
                                     {{ optional(optional($result->submission)->plant)->name . ' - ' . optional($result->plant_sample)->name }}
                                 </td>
@@ -63,18 +65,16 @@
                                                 class="mdi mdi-pencil"></i> </a>
                                     @endcan
                                     @if ($result->status == 'pending')
-                                        
-                                    
-                                    @can('edit_result')
-                                        <a href="{{ route('admin.result.approve_confirm_results', $result->id) }}"
-                                            class="btn btn-outline-success btn-sm" title="@lang('results.confirm_results')"><i
-                                                class="mdi mdi-check"></i> </a>
-                                    @endcan
-                                    @can('edit_result')
-                                        <a href="{{ route('admin.result.cancel_confirm_results', $result->id) }}"
-                                            class="btn btn-outline-danger btn-sm" title="@lang('results.confirm_results')"><i
-                                                class="mdi mdi-close"></i> </a>
-                                    @endcan
+                                        @can('edit_result')
+                                            <a href="{{ route('admin.result.approve_confirm_results', $result->id) }}"
+                                                class="btn btn-outline-success btn-sm" title="@lang('results.confirm_results')"><i
+                                                    class="mdi mdi-check"></i> </a>
+                                        @endcan
+                                        @can('edit_result')
+                                            <a href="{{ route('admin.result.cancel_confirm_results', $result->id) }}"
+                                                class="btn btn-outline-danger btn-sm" title="@lang('results.confirm_results')"><i
+                                                    class="mdi mdi-close"></i> </a>
+                                        @endcan
                                     @endif
                                 </td>
 
@@ -108,7 +108,7 @@
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th class="text-center" scope="col">{{ translate('component')  }}</th>
+                                        <th class="text-center" scope="col">{{ translate('component') }}</th>
                                         <th class="text-center" scope="col">{{ translate('unit') }} </th>
                                         <th class="text-center" scope="col">{{ translate('result') }} </th>
                                         <th class="text-center" scope="col">{{ translate('warning_limit') }}</th>
@@ -122,23 +122,67 @@
                                         <tr>
                                             <td class="text-center">
                                                 {{ $result_test_method_item->main_test_method_item->name }} </td>
-                                          
+
                                             <td class="text-center">
-                                                {{ $result_test_method_item->main_test_method_item->main_unit->name }}
+                                                {{ optional($result_test_method_item->main_test_method_item)->main_unit?->name ?? '-' }}
                                             </td>
-                                              <td class="text-center">
+                                            <td class="text-center">
                                                 {{ $result_test_method_item->result }} </td>
                                             <td class="text-center">
-                                                {{ get_warning_limit_and_type(  $result_test_method_item->test_method_item_id) }} </td>
+                                                {{ get_warning_limit_and_type($result_test_method_item->test_method_item_id) }}
+                                            </td>
                                             <td class="text-center">
-                                                {{ get_action_limit_and_type(  $result_test_method_item->test_method_item_id) }} </td>
-                                                @php
-                                                    $result_status = getStatus( $result_test_method_item->result ,$result_test_method_item->test_method_item_id)
-                                                @endphp
-                                            <td class="text-center @if ($result_status == 'warning')
-                                                text-warning @elseif($result_status == 'danger') text-danger
-                                            @endif">
-                                                {{ getStatus( $result_test_method_item->result ,$result_test_method_item->test_method_item_id) }} </td>
+                                                {{ get_action_limit_and_type($result_test_method_item->test_method_item_id) }}
+                                            </td>
+                                            @php
+                                                // Convert result to float
+                                                $resultValue = floatval($result_test_method_item->result);
+
+                                                // Get limits
+                                                $warningLimit = floatval(
+                                                    get_warning_limit($result_test_method_item->test_method_item_id) ??
+                                                        0,
+                                                );
+                                                $actionLimit = floatval(
+                                                    get_action_limit($result_test_method_item->test_method_item_id) ??
+                                                        0,
+                                                );
+                                                $warningType = get_warning_type(
+                                                    $result_test_method_item->test_method_item_id,
+                                                );
+                                                $actionType = get_action_type(
+                                                    $result_test_method_item->test_method_item_id,
+                                                );
+
+                                                // Calculate status
+                                                $result_status = getStatus(
+                                                    $resultValue,
+                                                    $result_test_method_item->test_method_item_id,
+                                                );
+
+                                                // If value is outside the range (less than min or greater than max), it should be Fail
+                                                // Check if we have a range (warning and action limits form a range)
+                                                if ($warningLimit > 0 && $actionLimit > 0) {
+                                                    $minLimit = min($warningLimit, $actionLimit);
+                                                    $maxLimit = max($warningLimit, $actionLimit);
+
+                                                    // If value is outside the range, it's Fail
+    if ($resultValue < $minLimit || $resultValue > $maxLimit) {
+        $result_status = 'danger';
+    }
+}
+
+// Convert status to Pass/Fail
+$display_status = match ($result_status) {
+    'danger' => 'Fail',
+    'normal' => 'Pass',
+    'warning' => 'Warning',
+                                                    default => $result_status,
+                                                };
+                                            @endphp
+                                            <td
+                                                class="text-center @if ($result_status == 'warning') text-warning @elseif($result_status == 'danger') text-danger @endif">
+                                                {{ $display_status }} </td>
                                             <td class="text-center">
                                                 {{ $result_test_method_item->main_test_method_item->action_limit }} </td>
                                         </tr>

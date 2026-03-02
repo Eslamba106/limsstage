@@ -105,28 +105,99 @@
                     <div class="card-body">
                         <form action="{{ route('admin.assign_template_designer') }}" method="Post">
                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="coa_temp_id" value="{{ $id }}">
 
-                            <div class="form-group col-6">
-                                <label class="form-label">{{ translate('sample') }}</label>
+                            <div class="row">
+                                <!-- Plant Assignment Section -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0">
+                                                <i class="bi bi-building"></i> {{ translate('Plant_Assignment') }}
+                                            </h5>
+                                            <small>{{ translate('Assign_to_all_samples_in_plant') }}</small>
+                                        </div>
+                                        <div class="card-body">
+                                            @if($plants->count() > 0)
+                                                @foreach ($plants as $plant_item)
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input plant-checkbox" 
+                                                            type="checkbox" 
+                                                            name="plant_id[]" 
+                                                            id="plant_{{ $plant_item->id }}"
+                                                            value="{{ $plant_item->id }}"
+                                                            data-plant-id="{{ $plant_item->id }}">
+                                                        <label class="form-check-label" for="plant_{{ $plant_item->id }}">
+                                                            <strong>{{ $plant_item->name }}</strong>
+                                                            <span class="text-muted">({{ translate('All_Sample_Points') }})</span>
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <p class="text-muted">{{ translate('No_plants_available_for_assignment') }}</p>
+                                            @endif
 
-                                @foreach ($samples as $sample_item)
-                                    <div class="form-check">
-                                        <input class="form-check-input @error('sample_id') is-invalid @enderror"
-                                            type="checkbox" name="sample_id[]" id="sample_{{ $sample_item->id }}"
-                                            value="{{ $sample_item->id }}"  >
-                                        <label class="form-check-label" for="sample_{{ $sample_item->id }}">
-                                            {{ $sample_item->sample_plant->name }}
-                                        </label>
+                                            @error('plant_id')
+                                                <div class="invalid-feedback d-block">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
                                     </div>
-                                @endforeach
+                                </div>
 
-                                @error('sample_id')
-                                    <div class="invalid-feedback d-block">
-                                        {{ $message }}
+                                <!-- Sample Point Assignment Section -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <h5 class="mb-0">
+                                                <i class="bi bi-geo-alt-fill"></i> {{ translate('Sample_Point_Assignment') }}
+                                            </h5>
+                                            <small>{{ translate('Assign_to_specific_sample_points') }}</small>
+                                        </div>
+                                        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                            @if($samples->count() > 0)
+                                                <div class="mb-2">
+                                                    <input type="checkbox" id="select_all_samples" class="form-check-input">
+                                                    <label for="select_all_samples" class="form-check-label">
+                                                        <strong>{{ translate('Select_All') }}</strong>
+                                                    </label>
+                                                </div>
+                                                <hr>
+                                                @foreach ($samples as $sample_item)
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input sample-checkbox @error('sample_id') is-invalid @enderror"
+                                                            type="checkbox" 
+                                                            name="sample_id[]" 
+                                                            id="sample_{{ $sample_item->id }}"
+                                                            value="{{ $sample_item->id }}"
+                                                            data-plant-id="{{ $sample_item->plant_id ?? '' }}">
+                                                        <label class="form-check-label" for="sample_{{ $sample_item->id }}">
+                                                            {{ $sample_item->sample_plant->name ?? 'N/A' }}
+                                                            @if($sample_item->plant_main)
+                                                                <small class="text-muted">({{ $sample_item->plant_main->name }})</small>
+                                                            @endif
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <p class="text-muted">{{ translate('No_samples_available_for_assignment') }}</p>
+                                            @endif
+
+                                            @error('sample_id')
+                                                <div class="invalid-feedback d-block">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
                                     </div>
-                                @enderror
+                                </div>
+                            </div>
 
-                                <input type="hidden" name="coa_temp_id" value="{{ $id }}">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>{{ translate('Note') }}:</strong> 
+                                {{ translate('Sample_specific_assignments_take_priority_over_plant_level_assignments') }}
                             </div>
 
                             {{-- <input type="hidden" name="_token" value="{{ csrf_token() }}">
@@ -168,14 +239,18 @@
 
 
 
-                            <div class=" mt-4 text-end">
-                                <button class="btn btn-primary">{{ trans('Save') }}</button>
+                            <div class="mt-4 text-end">
+                                <a href="{{ route('admin.template_designer') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> {{ translate('Cancel') }}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> {{ translate('Save') }}
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            {{-- </div> --}}
         </div>
     </section>
 
@@ -193,10 +268,37 @@
 
     <script>
         $(document).ready(function() {
-            $('.select-sample').select2({
-                placeholder: "{{ translate('select_Sample') }}",
-                allowClear: true,
-                width: '100%'
+            // Select all samples functionality
+            $('#select_all_samples').on('change', function() {
+                $('.sample-checkbox').prop('checked', $(this).is(':checked'));
+            });
+
+            // Warn if both plant and sample from same plant are selected
+            $('.plant-checkbox, .sample-checkbox').on('change', function() {
+                var selectedPlantIds = $('.plant-checkbox:checked').map(function() {
+                    return $(this).data('plant-id');
+                }).get();
+
+                $('.sample-checkbox').each(function() {
+                    var samplePlantId = $(this).data('plant-id');
+                    if (selectedPlantIds.includes(samplePlantId.toString()) && $(this).is(':checked')) {
+                        // Sample-specific takes priority, so this is fine
+                        // But we can show a warning
+                        console.log('Sample-specific assignment will take priority over plant-level assignment');
+                    }
+                });
+            });
+
+            // Form validation
+            $('form').on('submit', function(e) {
+                var hasPlantSelection = $('.plant-checkbox:checked').length > 0;
+                var hasSampleSelection = $('.sample-checkbox:checked').length > 0;
+
+                if (!hasPlantSelection && !hasSampleSelection) {
+                    e.preventDefault();
+                    alert('{{ translate('Please_select_at_least_one_plant_or_sample_point') }}');
+                    return false;
+                }
             });
         });
     </script>

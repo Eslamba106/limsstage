@@ -48,9 +48,11 @@
                             </button>
                         @endcan
                         @can('delete_submission')
-                            <button type="submit" name="bulk_action_btn" value="delete"
-                                class="btn btn-danger delete_confirm mt-3 mr-2"> <i class="la la-trash"></i>
-                                {{ __('dashboard.delete') }}</button>
+                            <button type="button" name="bulk_action_btn" value="delete"
+                                class="btn btn-danger delete-bulk-confirm mt-3 mr-2" id="bulk-delete-btn">
+                                <i class="la la-trash"></i>
+                                {{ __('dashboard.delete') }}
+                            </button>
                         @endcan
                         @can('create_submission')
                             <a href="{{ route('admin.submission.create') }}" class="btn btn-secondary mt-3 mr-2">
@@ -119,13 +121,17 @@
                                             alt="">
                                         {{ $submission_master->submission_number }}
                                     </td>
-                                    @else
+                                @else
                                     <td class="text-center">{{ $submission_master->submission_number }}</td>
                                 @endif
-                                {{-- <td class="text-center" id="barcode-{{ $submission_master->id }}">{!! $submission_master->barcode_image !!} --}}
-
-
+                                
+                                {{-- Hidden barcode element for printing --}}
+                                <td style="display: none;">
+                                    <div id="barcode-{{ $submission_master->id }}">
+                                        {!! $submission_master->barcode_image !!}
+                                    </div>
                                 </td>
+                                
                                 <td class="text-center">
                                     {{ \Carbon\Carbon::parse($submission_master->sampling_date_and_time)->format('M d, Y h:i A') }}
                                 </td>
@@ -168,8 +174,11 @@
                                 <td class="text-center">
                                     @can('delete_submission')
                                         <a href="{{ route('admin.submission.delete', $submission_master->id) }}"
-                                            class="btn btn-danger btn-sm" title="@lang('dashboard.delete')"><i
-                                                class="fa fa-trash"></i></a>
+                                            class="btn btn-danger btn-sm delete-single-confirm" title="@lang('dashboard.delete')"
+                                            data-submission-id="{{ $submission_master->id }}"
+                                            data-submission-number="{{ $submission_master->submission_number }}">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
                                     @endcan
                                     @can('edit_submission')
                                         <a href="{{ route('admin.submission.edit', $submission_master->id) }}"
@@ -184,7 +193,7 @@
                                     @endif
                                     @if ($submission_master->status == 'first_step')
                                         @can('create_result')
-                                            <a href="{{ route('admin.submission.change_status_without_qr', [$submission_master->id ]) }}"
+                                            <a href="{{ route('admin.submission.change_status_without_qr', [$submission_master->id]) }}"
                                                 class="btn btn-outline-warning text-dark  btn-sm">{{ translate('start_work_without_qr_code') }}</a>
                                         @endcan
                                     @endif
@@ -210,7 +219,7 @@
                                     @endif
 
                                     <button type="button" class="btn btn-sm btn-primary"
-                                        onclick="printBarcode('barcode-{{ $submission_master->id }}', '{{ $submission_master->submission_number }}')">
+                                        onclick="printBarcode('{{ $submission_master->id }}', '{{ $submission_master->submission_number }}')">
                                         {{ translate('print_barcode') }}
                                     </button>
                                 </td>
@@ -228,21 +237,24 @@
 @endsection
 @section('js')
     <script>
-        function printBarcode(barcodeId, submissionNumber) {
-            let barcodeDiv = document.getElementById(barcodeId);
-
-            if (!barcodeDiv) {
-                alert("لم يتم العثور على عنصر الباركود!");
-                return;
+        function printBarcode(submissionId, submissionNumber) {
+            // Find the barcode element by ID
+            let barcodeDiv = document.getElementById('barcode-' + submissionId);
+            
+            // Get barcode HTML
+            let barcodeHtml = '';
+            if (barcodeDiv && barcodeDiv.innerHTML) {
+                barcodeHtml = barcodeDiv.innerHTML;
+            } else {
+                // Fallback: show submission number as text if barcode not found
+                barcodeHtml = '<div style="font-family: monospace; font-size: 24px; padding: 20px; text-align: center;">' + submissionNumber + '</div>';
             }
-
-            let barcodeHtml = barcodeDiv.innerHTML;
 
             let printWindow = window.open('', '', 'width=400,height=300');
             printWindow.document.write(`
         <html>
         <head>
-            <title>Print Barcode</title>
+            <title>Print Barcode - ${submissionNumber}</title>
             <style>
                 body {
                     margin: 0;
@@ -256,16 +268,27 @@
                 }
                 h3 {
                     margin-bottom: 10px;
-                    font-size: 14px; 
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                img, svg {
+                    max-width: 100%;
+                    height: auto;
                 }
                 img {
-                    width: 700px;  /* ←   barcode width */
-                    height: 100px;  /* ←  barcode height  */
+                    width: 700px;
+                    height: 100px;
                 }
- 
+
                 @page {
-                    size: 80mm 40mm; /* ← vol page */
+                    size: 80mm 40mm;
                     margin: 2mm;
+                }
+                @media print {
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
                 }
             </style>
         </head>
@@ -276,8 +299,12 @@
             </div>
             <script>
                 window.onload = function() {
-                    window.print();
-                    window.close();
+                    setTimeout(function() {
+                        window.print();
+                        setTimeout(function() {
+                            window.close();
+                        }, 100);
+                    }, 250);
                 }
             <\/script>
         </body>
@@ -285,5 +312,74 @@
     `);
             printWindow.document.close();
         }
+
+        // Sweet Alert for single delete
+        $(document).on('click', '.delete-single-confirm', function(e) {
+            e.preventDefault();
+
+            const deleteUrl = $(this).attr('href');
+            const submissionNumber = $(this).data('submission-number') || '';
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + (submissionNumber ?
+                    ' ({{ translate('submission_number') }}: ' + submissionNumber + ')' : ''),
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+
+        // Sweet Alert for bulk delete
+        $(document).on('click', '#bulk-delete-btn', function(e) {
+            e.preventDefault();
+
+            const checkedItems = $('input.check_bulk_item:checked').length;
+            const btn = $(this);
+
+            if (checkedItems === 0) {
+                Swal.fire({
+                    title: '{{ translate('no_selection') }}',
+                    text: '{{ translate('please_select_at_least_one_item') }}',
+                    icon: 'warning',
+                    confirmButtonText: '{{ translate('ok') }}'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + ' (' + checkedItems +
+                    ' {{ translate('items_selected') }})',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    // Create a temporary submit button and click it
+                    const form = btn.closest('form');
+                    const tempBtn = $('<button>').attr({
+                        type: 'submit',
+                        name: 'bulk_action_btn',
+                        value: 'delete',
+                        style: 'display: none;'
+                    });
+                    form.append(tempBtn);
+                    tempBtn.click();
+                }
+            });
+        });
     </script>
 @endsection

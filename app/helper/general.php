@@ -96,7 +96,11 @@ if (! function_exists('company_id')) {
 if (! function_exists('test_method_result')) {
     function test_method_result($id)
     {
-        return ResultTestMethodItem::where('result_test_method_id', $id)->select('result_test_method_id', 'id', 'acceptance_status')->first()->acceptance_status;
+        $resultTestMethodItem = ResultTestMethodItem::where('result_test_method_id', $id)
+            ->select('result_test_method_id', 'id', 'acceptance_status')
+            ->first();
+        
+        return $resultTestMethodItem?->acceptance_status ?? 'pending';
     }
 }
 if (! function_exists('parseLimit')) {
@@ -403,10 +407,17 @@ if (! function_exists('getStatus')) {
  */
 function getStatusFromLimits($value, $warningLimit, $warningType, $actionLimit, $actionType)
 {
+    // Convert values to float for proper comparison
+    $value = floatval($value);
+    $warningLimit = floatval($warningLimit);
+    $actionLimit = floatval($actionLimit);
+    
+    // Check action limit first (most critical)
     if (compare($value, $actionType, $actionLimit)) {
         return 'danger';
     }
 
+    // Check warning limit
     if (compare($value, $warningType, $warningLimit)) {
         return 'warning';
     }

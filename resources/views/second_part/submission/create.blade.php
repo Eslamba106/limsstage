@@ -230,7 +230,7 @@
                             <label class="form-check-label" for="${id}">${method.master_test_method.name} </label>
                         </div>
                     </div>
-                     
+
                     `;
                         methodsContainer.append(methodHtml);
 

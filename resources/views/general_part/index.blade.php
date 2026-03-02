@@ -90,8 +90,11 @@
                                 <td class="text-center">
                                     @can('delete_' . $route)
                                         <a href="{{ route('admin.' . $route . '.delete', $main_item->id) }}"
-                                            class="btn btn-danger btn-sm" title="{{ translate('delete') }}"><i
-                                                class="fa fa-trash"></i></a>
+                                            class="btn btn-danger btn-sm delete-single-confirm" 
+                                            title="{{ translate('delete') }}"
+                                            data-item-name="{{ $route == 'email' ? $main_item->email : $main_item->name }}">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
                                     @endcan
                                     @can('edit_' . $route)
                                         <a href="{{ route('admin.' . $route . '.edit', $main_item->id) }}"
@@ -186,4 +189,32 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('js')
+    <script>
+        // Sweet Alert for single delete
+        $(document).on('click', '.delete-single-confirm', function(e) {
+            e.preventDefault();
+
+            const deleteUrl = $(this).attr('href');
+            const itemName = $(this).data('item-name') || '';
+
+            Swal.fire({
+                title: '{{ translate('are_you_sure') }}?',
+                text: '{{ translate('you_will_not_be_able_to_revert_this') }}' + (itemName ? ' (' + itemName + ')' : ''),
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '{{ translate('yes_delete_it') }}',
+                cancelButtonText: '{{ translate('cancel') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+    </script>
 @endsection

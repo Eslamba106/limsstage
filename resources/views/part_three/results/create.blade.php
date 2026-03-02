@@ -57,9 +57,13 @@
     <form action="{{ route('admin.result.store') }}" method="post" enctype="multipart/form-data">
         @csrf
         {{-- {{ dd($sample->master_sample) }} --}}
-        <input type="hidden" name="sample_id" value="{{ $sample->master_sample->id }}">
+        <input type="hidden" name="sample_id" value="{{ $type == 'schedule' ? ($sample->sample->id ?? $sample->master_sample->id) : $sample->master_sample->id }}">
         <input type="hidden" name="submission_id" value="{{ $sample->id }}">
-        @foreach ($sample->submission_test_method_items as $item_test_method)
+        <input type="hidden" name="type" value="{{ $type ?? 'submission' }}">
+        @php
+            $items = $type == 'schedule' ? $sample->sample_routine_scheduler_items : $sample->submission_test_method_items;
+        @endphp
+        @foreach ($items as $item_test_method)
             <div class="row gx-2 gy-3 m-2">
                 <div class="col-lg-8 col-xl-9">
                     <!-- Card -->
@@ -67,19 +71,43 @@
                         <!-- Body -->
                         <div class="card-header">
                             <div class="d-flex gap-2">
-                                <h4 class="mb-0">{{ $item_test_method->sample_test_method->master_test_method->name }}
+                                <h4 class="mb-0">
+                                    @if ($type == 'schedule')
+                                        {{ $item_test_method->test_method->name ?? '' }}
+                                    @else
+                                        {{ $item_test_method->sample_test_method?->master_test_method?->name ?? '' }}
+                                    @endif
                                 </h4>
                             </div>
                         </div>
                         <input type="hidden" name="sample_test_method_items[]"
-                            value="{{ $item_test_method->sample_test_method->master_test_method->id }}">
+                            value="{{ $type == 'schedule' ? ($item_test_method->test_method_ids ?? '') : ($item_test_method->sample_test_method?->master_test_method?->id ?? '') }}">
                         <div class="card-body bg-light">
-                            <input type="hidden" name="sample_test_method_id[]"
-                                value="{{ $item_test_method->sample_test_method->id }}">
+                            @if ($type == 'schedule')
+                                @php
+                                    // Find SampleTestMethod for schedule item
+                                    $sampleTestMethod = \App\Models\SampleTestMethod::where('sample_id', $sample->sample_id)
+                                        ->where('test_method_id', $item_test_method->test_method_ids)
+                                        ->first();
+                                @endphp
+                                <input type="hidden" name="sample_test_method_id[]"
+                                    value="{{ $sampleTestMethod->id ?? '' }}">
+                            @else
+                                <input type="hidden" name="sample_test_method_id[]"
+                                    value="{{ $item_test_method->sample_test_method?->id ?? '' }}">
+                            @endif
                             <hr>
 
-
-                            @foreach ($item_test_method->sample_test_method->sample_test_method_items as $sample_test_method_item)
+                            @php
+                                if ($type == 'schedule') {
+                                    $testMethodItems = $sampleTestMethod->sample_test_method_items ?? collect([]);
+                                    $currentTestMethodId = $item_test_method->test_method_ids ?? '';
+                                } else {
+                                    $testMethodItems = $item_test_method->sample_test_method?->sample_test_method_items ?? collect([]);
+                                    $currentTestMethodId = $item_test_method->sample_test_method?->master_test_method?->id ?? '';
+                                }
+                            @endphp
+                            @foreach ($testMethodItems as $sample_test_method_item)
                                 @if (!isset($item_test_method->result))
                                     <div class="row">
                                         <div class="col-md-6 col-lg-2 col-xl-3">
@@ -94,7 +122,7 @@
                                                     name="test_method_items[]" hidden readonly
                                                     value="{{ $sample_test_method_item->test_method_item->id }}">
                                                 <input type="hidden" class="form-control" style="border-radius: 5%"
-                                                    name="submission_item-{{ $sample_test_method_item->test_method_item->id . '-' . $item_test_method->sample_test_method->master_test_method->id }}"
+                                                    name="submission_item-{{ $sample_test_method_item->test_method_item->id . '-' . $currentTestMethodId }}"
                                                     readonly value="{{ $item_test_method->id }}">
 
                                             </div>
@@ -105,7 +133,7 @@
 
                                             <div class="form-group">
                                                 <input type="text" class="form-control" style="border-radius: 5%"
-                                                    name="result-{{ $sample_test_method_item->test_method_item->id . '-' . $item_test_method->sample_test_method->master_test_method->id }}"
+                                                    name="result-{{ $sample_test_method_item->test_method_item->id . '-' . $currentTestMethodId }}"
                                                     id="result-{{ $sample_test_method_item->id }}"
                                                     onkeyup="get_status(this,{{ $sample_test_method_item->test_method_item_id }})" />
                                             </div>
@@ -137,7 +165,7 @@
 
                                             <div class="form-group">
                                                 <input type="text" class="form-control" readonly
-                                                    name="status-{{ $sample_test_method_item->test_method_item->id . '-' . $item_test_method->sample_test_method->master_test_method->id }}"
+                                                    name="status-{{ $sample_test_method_item->test_method_item->id . '-' . $currentTestMethodId }}"
                                                     id="status-{{ $sample_test_method_item->test_method_item->id }}">
                                             </div>
 
@@ -161,7 +189,15 @@
                         <!-- Body -->
                         @if ($sample)
                             {{-- {{ dd($item_test_method) }} --}}
-                            @foreach ($item_test_method->sample_test_method->sample_test_method_items as $sample_test_method_item)
+                            @php
+                                // Get sample_test_method_items based on type
+                                if ($type == 'schedule') {
+                                    $methodItemsForCard = $sampleTestMethod->sample_test_method_items ?? collect([]);
+                                } else {
+                                    $methodItemsForCard = $item_test_method->sample_test_method?->sample_test_method_items ?? collect([]);
+                                }
+                            @endphp
+                            @foreach ($methodItemsForCard as $sample_test_method_item)
                                 <div class="card-body d-none" id="card-{{ $sample_test_method_item->id }}">
 
 

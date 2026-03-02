@@ -134,7 +134,7 @@
                                         <span class="text-muted">#{{ $loop->index + 1 }}</span>
                                     </label>
                                 </th>
-                                <td class="text-center">{{ $result_item->submission->submission_number }} </td>
+                                <td class="text-center">{{ $result_item->submission_number ?? $result_item->submission?->submission_number ?? '-' }} </td>
                                 <td class="text-center">
                                     {{ \Carbon\Carbon::parse($result_item->sampling_date_and_time)->format('M d, Y h:i A') }}
                                 </td>
