@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('report_generation_settings_emails', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('report_generation_setting_id');
+            $table->unsignedBigInteger('report_setting_id');
             $table->unsignedBigInteger('email_id');
             $table->timestamps();
             
-            $table->foreign('report_generation_setting_id', 'rgs_emails_setting_id_fk')
+            $table->foreign('report_setting_id', 'rgs_emails_setting_id_fk')
                   ->references('id')
                   ->on('report_generation_settings')
                   ->onDelete('cascade');
@@ -27,7 +27,7 @@ return new class extends Migration
                   ->on('web_emails')
                   ->onDelete('cascade');
             
-            $table->unique(['report_generation_setting_id', 'email_id']);
+            $table->unique(['report_setting_id', 'email_id']);
         });
     }
 

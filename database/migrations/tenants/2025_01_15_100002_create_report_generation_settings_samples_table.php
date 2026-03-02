@@ -14,11 +14,11 @@ return new class extends Migration
         if (!Schema::hasTable('report_generation_settings_samples')) {
             Schema::create('report_generation_settings_samples', function (Blueprint $table) {
                 $table->id();
-                $table->integer('report_generation_setting_id');
+                $table->integer('report_setting_id');
                 $table->integer('sample_id');
                 $table->timestamps();
                 
-                $table->unique(['report_generation_setting_id', 'sample_id'], 'rgs_samples_unique');
+                $table->unique(['report_setting_id', 'sample_id'], 'rgs_samples_unique');
             });
         }
     }

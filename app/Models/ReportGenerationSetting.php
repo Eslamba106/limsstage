@@ -30,7 +30,7 @@ class ReportGenerationSetting extends Model
         return $this->belongsToMany(
             WebEmail::class,
             'report_generation_settings_emails',
-            'report_generation_setting_id',
+            'report_setting_id',
             'email_id'
         )->withTimestamps();
     }
@@ -40,7 +40,7 @@ class ReportGenerationSetting extends Model
         return $this->belongsToMany(
             Sample::class,
             'report_generation_settings_samples',
-            'report_generation_setting_id',
+            'report_setting_id',
             'sample_id'
         )->withTimestamps();
     }
