@@ -27,7 +27,7 @@ return new class extends Migration
                   ->on('web_emails')
                   ->onDelete('cascade');
             
-            $table->unique(['report_setting_id', 'email_id']);
+                $table->unique(['report_setting_id', 'email_id'], 'rgs_emails_unique');
         });
     }
 
